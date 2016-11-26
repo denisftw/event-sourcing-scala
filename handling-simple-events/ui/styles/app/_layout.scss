@@ -1,0 +1,22 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  color: #555;
+  font-family: Arial, Helvetica Neue, Helvetica, OpenSans, sans-serif;
+}
+
+.icon-button {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  outline: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}

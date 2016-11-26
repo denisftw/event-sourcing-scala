@@ -1,0 +1,13 @@
+.view-home-composite {
+  border-left: 1px solid #dedede;
+  border-right: 1px solid #dedede;
+  height: 100%;
+
+  .view-home-composite__react-panel {
+    .view-home-composite__react-panel__welcome-text {
+      padding: 16px;
+      font-size: 16px;
+      line-height: 1.8em;
+    }
+  }
+}

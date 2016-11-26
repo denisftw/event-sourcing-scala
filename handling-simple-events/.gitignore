@@ -1,0 +1,12 @@
+logs
+target
+/.idea
+/.idea_modules
+/.classpath
+/.project
+/.settings
+/RUNNING_PID
+node_modules
+public/compiled
+npm-debug.log
+/data/validationdb.*

@@ -1,0 +1,29 @@
+.time-travel-dashboard {
+  width: 70%;
+  margin: 0 auto;
+  padding-top: 20px;
+  .time-travel-dashboard__prompt {
+    width: 70%;
+    margin: 0 auto;
+    font-size: 16px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  .time-travel-dashboard__date-selector {
+    .time-travel-dashboard__date-selector__input {
+      width: 70%;
+      margin: 0 auto;
+      .rdtPicker {
+        border: 1px solid lightgrey;
+      }
+    }
+  }
+  .time-travel-dashboard__button-panel {
+    padding-top: 20px;
+    width: 50%;
+    margin: 0 auto;
+    button {
+      width: 100%
+    }
+  }
+}
