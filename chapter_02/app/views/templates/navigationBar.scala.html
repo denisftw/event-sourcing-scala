@@ -1,0 +1,33 @@
+@import model.NavigationData
+@(navigationData: NavigationData)
+
+<div class="navigation-bar-component">
+    <div class="navigation-bar__top-panel">
+        <div class="navigation-bar__preferences-panel">
+            <ul>
+
+            </ul>
+        </div>
+        <div class="navigation-bar__user-panel">
+            <ul>
+            @if(navigationData.isLoggedIn) {
+                @navigationData.userView.map { user =>
+                    @if(user.isAdmin) {
+                        <li><a href="/admin">Admin</a></li>
+                    }
+                    <li><a href="/profile/@user.urlCode">@user.userCode</a></li>
+                    <li><a id="data-user-id-holder" data-user-id="@user.userId" href="/logout">Logout</a></li>
+                }
+            } else {
+                <li><a href="/login">Sign In</a></li>
+                <li><a href="/signup">Sign Up</a></li>
+            }
+            </ul>
+        </div>
+    </div>
+    <div class="navigation-bar__logo-panel">
+        <a href="/">
+            <img src="/assets/images/logo.png"/>
+        </a>
+    </div>
+</div>
