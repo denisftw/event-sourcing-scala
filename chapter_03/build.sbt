@@ -1,4 +1,4 @@
-name := """play-event-sourcing-starter"""
+name := """practical-event-sourcing-03"""
 
 val commonSettings = Seq(
   version := "1.0-SNAPSHOT",
@@ -26,5 +26,6 @@ libraryDependencies ++= Seq(
   "org.scalikejdbc" %% "scalikejdbc"       % "2.4.2",
   "org.scalikejdbc" %% "scalikejdbc-config"  % "2.4.2",
   "ch.qos.logback"  %  "logback-classic"   % "1.1.7",
-  "de.svenkubiak" % "jBCrypt" % "0.4.1"
+  "de.svenkubiak" % "jBCrypt" % "0.4.1",
+  "com.typesafe.akka" %% "akka-stream-kafka" % "0.13"
 )

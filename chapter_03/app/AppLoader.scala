@@ -36,7 +36,11 @@ trait AppComponents extends BuiltInComponents
   lazy val tagController = wire[TagController]
   lazy val logDao = wire[LogDao]
   lazy val readService = wire[ReadService]
+
   lazy val tagEventProducer = wire[TagEventProducer]
+  lazy val tagEventConsumer = wire[TagEventConsumer]
+  lazy val logRecordConsumer = wire[LogRecordConsumer]
+  lazy val consumerAggregator = wire[ConsumerAggregator]
 
   lazy val sessionDao = wire[SessionDao]
   lazy val userDao = wire[UserDao]

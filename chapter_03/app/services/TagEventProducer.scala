@@ -2,56 +2,37 @@ package services
 
 import java.util.UUID
 
-import actors.InMemoryReadActor
 import akka.actor.ActorSystem
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.{EventData, LogRecord}
-import dao.LogDao
-import model.Tag
 import org.joda.time.DateTime
-
-import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import play.api.Configuration
+import util.ServiceKafkaProducer
 
 /**
   * Created by denis on 11/28/16.
   */
 class TagEventProducer(actorSystem: ActorSystem,
-    logDao: LogDao, readService: ReadService) {
+    configuration: Configuration) {
 
-  def createTag(text: String, createdBy: UUID): Future[Seq[Tag]] = {
+  val kafkaProducer = new ServiceKafkaProducer("tags",
+    actorSystem, configuration)
+
+  def createTag(text: String, createdBy: UUID): Unit = {
     val tagId = UUID.randomUUID()
     val event = TagCreated(tagId, text, createdBy)
     val record = createLogRecord(event)
-    logDao.insertLogRecord(record) match {
-      case Failure(th) => Future.failed(th)
-      case Success(_) => adjustReadState(record)
-    }
+    kafkaProducer.send(record.encode)
   }
 
-  def deleteTag(tagId: UUID, deletedBy: UUID): Future[Seq[Tag]] = {
+  def deleteTag(tagId: UUID, deletedBy: UUID): Unit = {
     val event = TagDeleted(tagId, deletedBy)
     val record = createLogRecord(event)
-    logDao.insertLogRecord(record) match {
-      case Failure(th) => Future.failed(th)
-      case Success(_) => adjustReadState(record)
-    }
+    kafkaProducer.send(record.encode)
   }
 
   private def createLogRecord(eventData: EventData): LogRecord = {
     LogRecord(UUID.randomUUID(), eventData.action,
       eventData.json, DateTime.now())
-  }
-
-  import java.util.concurrent.TimeUnit
-  import akka.pattern.ask
-  import akka.util.Timeout
-  import scala.concurrent.ExecutionContext.Implicits.global
-  private def adjustReadState(logRecord: LogRecord): Future[Seq[Tag]] = {
-    implicit val timeout = Timeout.apply(5, TimeUnit.SECONDS)
-    val actor = actorSystem.actorSelection(InMemoryReadActor.path)
-    (actor ? InMemoryReadActor.ProcessEvent(logRecord)).flatMap { _ =>
-      readService.getTags
-    }
   }
 }
