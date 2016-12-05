@@ -1,0 +1,17 @@
+@(maybeMessage: Option[String])(htmlContent: Html)
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <script src="/assets/js/angular-1.5.3.min.js"></script>
+        <link rel="stylesheet" href="@routes.Assets.versioned("compiled/styles.css")">
+        <link rel="icon" href="@routes.Assets.versioned("images/favicon.ico")">
+        <title>Sign In</title>
+    </head>
+    <body>
+        <div class="login-page" ng-app>
+            @views.html.templates.logoPanel()
+            @htmlContent
+        </div>
+    </body>
+</html>
