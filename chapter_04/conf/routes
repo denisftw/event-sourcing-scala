@@ -9,6 +9,7 @@ POST    /api/createTag              controllers.TagController.createTag
 POST    /api/deleteTag              controllers.TagController.deleteTag
 GET     /api/tags                   controllers.TagController.getTags
 GET     /api/sse                    controllers.MainController.serverEventStream
+POST    /api/rewind                 controllers.MainController.rewind
 
 # Security
 GET     /login                      controllers.AuthController.login

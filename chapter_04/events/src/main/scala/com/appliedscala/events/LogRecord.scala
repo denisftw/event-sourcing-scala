@@ -22,4 +22,8 @@ object LogRecord {
   def decode(str: String): Option[LogRecord] = {
     Json.parse(str).asOpt[LogRecord](reads)
   }
+  def fromEvent(eventData: EventData): LogRecord = {
+    LogRecord(UUID.randomUUID(), eventData.action,
+      eventData.json, DateTime.now())
+  }
 }

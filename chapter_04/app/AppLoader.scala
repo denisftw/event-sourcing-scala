@@ -11,6 +11,7 @@ import dao._
 import scalikejdbc.config.DBs
 import security.{UserAuthAction, UserAwareAction}
 import services._
+import util.EventValidator
 
 import scala.concurrent.Future
 
@@ -44,7 +45,12 @@ trait AppComponents extends BuiltInComponents
 
   lazy val sessionDao = wire[SessionDao]
   lazy val userDao = wire[UserDao]
+  lazy val neo4JReadDao = wire[Neo4JReadDao]
+  lazy val neo4JQueryExecutor = wire[Neo4JQueryExecutor]
 
+  lazy val eventValidator = wire[EventValidator]
+  lazy val validationService = wire[ValidationService]
+  lazy val rewindService = wire[RewindService]
   lazy val userService = wire[UserService]
   lazy val authService = wire[AuthService]
   lazy val userAuthAction = wire[UserAuthAction]

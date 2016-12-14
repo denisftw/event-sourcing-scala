@@ -27,5 +27,6 @@ libraryDependencies ++= Seq(
   "org.scalikejdbc" %% "scalikejdbc-config"  % "2.4.2",
   "ch.qos.logback"  %  "logback-classic"   % "1.1.7",
   "de.svenkubiak" % "jBCrypt" % "0.4.1",
+  "org.neo4j.driver" % "neo4j-java-driver" % "1.0.6",
   "com.typesafe.akka" %% "akka-stream-kafka" % "0.13"
 )
