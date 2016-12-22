@@ -51,12 +51,6 @@ class TagManager extends React.Component {
   componentDidMount = () => {
     axios.get("/api/tags").then(this.handleResponse);
   };
-  componentWillMount = () => {
-    this.props.dispatch({
-      type: 'make_request',
-      data: 'tags'
-    });
-  };
   render = () => {
     const tags = this.props.tags;
     return <div className="tag-manager">

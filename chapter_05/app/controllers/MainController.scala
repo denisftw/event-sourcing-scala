@@ -17,6 +17,8 @@ class MainController(userAuthAction: UserAuthAction,
       WebPageData("Home")))
   }
 
+  def indexParam(unused: String) = index
+
   def error500 = Action {
     InternalServerError(views.html.errorPage())
   }

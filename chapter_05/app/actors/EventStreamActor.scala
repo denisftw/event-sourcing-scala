@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.Props
 import akka.stream.actor.ActorPublisher
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsString, JsValue}
 
 
 /**
@@ -16,6 +16,8 @@ class EventStreamActor extends ActorPublisher[JsValue] {
 
   override def receive: Receive = {
     case DataUpdated(js) => onNext(js)
+    case ErrorOccurred(message) =>
+      onNext(JsObject(Seq("error" -> JsString(message))))
     case Request(_) => ()
     case Cancel => context.stop(self)
   }

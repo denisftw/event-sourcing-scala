@@ -35,6 +35,10 @@ trait AppComponents extends BuiltInComponents
   lazy val mainController = wire[MainController]
   lazy val authController = wire[AuthController]
   lazy val tagController = wire[TagController]
+  lazy val questionController = wire[QuestionController]
+  lazy val questionEventProducer = wire[QuestionEventProducer]
+  lazy val questionEventConsumer = wire[QuestionEventConsumer]
+
   lazy val logDao = wire[LogDao]
   lazy val readService = wire[ReadService]
 

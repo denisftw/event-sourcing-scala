@@ -6,7 +6,9 @@ import actors.EventStreamActor
 import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
 import services.ValidationService
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
   * Created by denis on 12/12/16.
@@ -15,7 +17,7 @@ class EventValidator(validationService: ValidationService,
     actorSystem: ActorSystem) {
 
   def validateAndSend(userId: UUID, event: LogRecord,
-                      kafkaProducer: ServiceKafkaProducer): Unit = {
+      kafkaProducer: ServiceKafkaProducer): Future[Option[String]] = {
     val maybeErrorMessageF = validationService.validate(event)
     maybeErrorMessageF.map {
       case Some(errorMessage) =>
@@ -25,5 +27,6 @@ class EventValidator(validationService: ValidationService,
       case None =>
         kafkaProducer.send(event.encode)
     }
+    maybeErrorMessageF
   }
 }

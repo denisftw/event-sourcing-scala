@@ -73,7 +73,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
   def getAllTags: Try[Seq[Tag]] = {
     val query =
-      """MATCH (t: Tag) RETURN t.tagId as tagId,
+      """MATCH (t: Tag) RETURN t .tagId as tagId,
        t.tagText as tagText ORDER BY tagText"""
     val recordsT = queryExecutor.executeQuery(Neo4JQuery.simple(query))
     recordsT.map { records =>

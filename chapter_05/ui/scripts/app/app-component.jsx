@@ -4,6 +4,14 @@ import axios from 'axios';
 import TagManager from './views/tag-manager.jsx';
 import { createStore } from 'redux';
 import { Provider } from 'react-redux';
+import { Router, Route, IndexRoute,
+  IndexRedirect, browserHistory } from 'react-router';
+import HomeComposite from './views/home-composite.jsx';
+import AskQuestionView from './views/ask-question-view.jsx';
+import NotificationService from './util/notification-service.js';
+import QuestionComposite from './views/question-composite.jsx';
+import QuestionListView from './views/question-list.jsx';
+import QuestionDetailsView from './views/question-details.jsx';
 
 class AppComponent {
   init = () => {
@@ -22,17 +30,36 @@ class AppComponent {
     }
   };
   updateReceived = (data) => {
-    console.log('updateReceived', data);
     if (data['updateType'] == 'tags') {
       this.store.dispatch({
         type: 'tags_updated',
         data: data['updateData']
       });
     }
+    else if (data['updateType'] == 'questions') {
+      this.store.dispatch({
+        type: 'questions_updated',
+        data: data['updateData']
+      });
+    }
+    else if (data['updateType'] == 'question_thread') {
+      this.store.dispatch({
+        type: 'question_thread_updated',
+        data: data['updateData']
+      });
+    }
+    else if (data['error'] != null) {
+      NotificationService.showMessage({
+        messageType: 'error',
+        messageText: data['error']
+      });
+    }
   };
   initAppState = () => {
     const initialState = {
-      tags: []
+      tags: [],
+      questions: [],
+      questionThread: {}
     };
     const reducer = (state = initialState, action) => {
       const updatedState = {...state};
@@ -40,6 +67,14 @@ class AppComponent {
 
       if (actionType == 'tags_updated') {
         updatedState['tags'] = action.data;
+      } else if (actionType == 'questions_updated') {
+        updatedState['questions'] = action.data;
+      } else if (actionType == 'question_thread_loaded') {
+        updatedState['questionThread'] = action.data;
+      } else if (actionType == 'question_thread_updated') {
+        if (state['questionThread']['id'] == action.data['id']) {
+          updatedState['questionThread'] = action.data;
+        }
       }
 
       return updatedState;
@@ -60,7 +95,17 @@ class AppComponent {
     const reactDiv = document.getElementById('reactDiv');
     if (!!reactDiv) {
       ReactDOM.render(<Provider store={this.store}>
-        <TagManager />
+        <Router history={browserHistory} >
+          <Route path='/' component={HomeComposite} >
+            <IndexRedirect to="/ask" />
+            <Route path='/tags' component={TagManager} />
+            <Route path='/ask' component={AskQuestionView}  />
+            <Route path='/questions' component={QuestionComposite}>
+              <IndexRoute component={QuestionListView} />
+              <Route path='/questions/:questionId' component={QuestionDetailsView} />
+            </Route>
+          </Route>
+        </Router>
       </Provider>, reactDiv);
     }
   }

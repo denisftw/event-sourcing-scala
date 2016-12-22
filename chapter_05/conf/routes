@@ -3,6 +3,11 @@
 # ~~~~
 
 GET     /                           controllers.MainController.index
+GET     /tags                       controllers.MainController.index
+GET     /ask                        controllers.MainController.index
+GET     /questions                  controllers.MainController.index
+GET     /questions/$unused<.*>      controllers.MainController.indexParam(unused)
+
 GET     /500                        controllers.MainController.error500
 
 POST    /api/createTag              controllers.TagController.createTag
@@ -10,6 +15,9 @@ POST    /api/deleteTag              controllers.TagController.deleteTag
 GET     /api/tags                   controllers.TagController.getTags
 GET     /api/sse                    controllers.MainController.serverEventStream
 POST    /api/rewind                 controllers.MainController.rewind
+GET     /api/questions              controllers.QuestionController.getQuestions
+POST    /api/createQuestion         controllers.QuestionController.createQuestion
+POST    /api/deleteQuestion         controllers.QuestionController.deleteQuestion
 
 # Security
 GET     /login                      controllers.AuthController.login

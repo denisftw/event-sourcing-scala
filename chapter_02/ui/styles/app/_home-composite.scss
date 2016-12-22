@@ -10,4 +10,45 @@
       line-height: 1.8em;
     }
   }
+
+  .view-home-composite__refresh-panel {
+    width: 100%;
+    background-color: #337ab7;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+  }
+  .view-home-composite__main-panel {
+    display: table;
+    min-height: 640px;
+    width: 100%;
+    .view-home-composite__side-menu-panel {
+      display: table-cell;
+      background-color: white;
+      padding: 30px;
+      width: 170px;
+      .nav > li > a.active {
+        background-color: #337ab7;
+        color: white;
+        border-radius: 4px;
+        &:hover {
+          background-color: #337ab7;
+          color: white;
+        }
+      }
+      div {
+        text-align: center;
+        img {
+          margin-bottom: 20px;
+        }
+      }
+    }
+    .view-home-composite__content-panel {
+      display: table-cell;
+      //border-right: 1px solid #dedede;
+      vertical-align: top;
+      width: 100%;
+    }
+  }
 }
