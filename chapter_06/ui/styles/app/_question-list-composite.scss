@@ -1,0 +1,16 @@
+.question-list-composite-container {
+  display: block;
+  width: 100%;
+  padding-top: 40px;
+  .question-list-composite {
+    width: 70%;
+    margin: 0 auto;
+    padding-bottom: 12px;
+    .question-list-composite__header {
+      border-bottom: 1px solid lightgray;
+    }
+    .question-list-composite__content {
+      padding-left: 12px;
+    }
+  }
+}
