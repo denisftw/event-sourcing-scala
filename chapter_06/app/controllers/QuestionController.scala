@@ -4,10 +4,13 @@ package controllers
   * Created by denis on 12/14/16.
   */
 
+import java.util.UUID
+
 import play.api.libs.json.Json
 import security.UserAuthAction
 import play.api.mvc.Controller
 import services.{QuestionEventProducer, ReadService}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -45,6 +48,15 @@ def createQuestion() = userAuthAction.async { implicit request =>
     questionsT match {
       case Failure(th) => InternalServerError
       case Success(questions) => Ok(Json.toJson(questions))
+    }
+  }
+
+  def getQuestionThread(questionId: UUID) = Action {
+    val threadT = readService.getQuestionThread(questionId)
+    threadT match {
+      case Failure(_) => InternalServerError
+      case Success(Some(thread)) => Ok(Json.toJson(thread))
+      case Success(None) => NotFound
     }
   }
 

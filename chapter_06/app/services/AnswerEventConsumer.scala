@@ -10,13 +10,13 @@ import play.api.Configuration
 import util.ServiceKafkaConsumer
 
 /**
-  * Created by denis on 12/14/16.
+  * Created by denis on 12/23/16.
   */
-class QuestionEventConsumer(neo4JReadDao: Neo4JReadDao,
+class AnswerEventConsumer(neo4JReadDao: Neo4JReadDao,
     actorSystem: ActorSystem, configuration: Configuration,
     materializer: Materializer, readService: ReadService) {
 
-  val topicName = "questions"
+  val topicName = "answers"
   val serviceKafkaConsumer = new ServiceKafkaConsumer(Set(topicName),
     "read", materializer, actorSystem, configuration, handleEvent)
 
@@ -25,13 +25,16 @@ class QuestionEventConsumer(neo4JReadDao: Neo4JReadDao,
     maybeLogRecord.foreach(adjustReadState)
   }
 
-  private def adjustReadState(logRecord: LogRecord): Unit = {
-    neo4JReadDao.handleEvent(logRecord)
-    val questionsT = readService.getAllQuestions
-    questionsT.foreach { questions =>
-      val update = ServerSentMessage.create("questions", questions)
-      val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
-      esActor ! EventStreamActor.DataUpdated(update.json)
+private def adjustReadState(logRecord: LogRecord): Unit = {
+  neo4JReadDao.handleEventWithUpdate(logRecord) { maybeUpdateId =>
+    maybeUpdateId.foreach { updateId =>
+      val threadT = readService.getQuestionThread(updateId)
+      threadT.foreach { thread =>
+        val update = ServerSentMessage.create("questionThread", thread)
+        val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
+        esActor ! EventStreamActor.DataUpdated(update.json)
+      }
     }
   }
+}
 }

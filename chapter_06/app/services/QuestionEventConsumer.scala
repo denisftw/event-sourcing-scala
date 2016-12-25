@@ -27,8 +27,8 @@ class QuestionEventConsumer(neo4JReadDao: Neo4JReadDao,
 
   private def adjustReadState(logRecord: LogRecord): Unit = {
     neo4JReadDao.handleEvent(logRecord)
-    val questions = readService.getAllQuestions
-    questions.foreach { questions =>
+    val questionsT = readService.getAllQuestions
+    questionsT.foreach { questions =>
       val update = ServerSentMessage.create("questions", questions)
       val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
       esActor ! EventStreamActor.DataUpdated(update.json)

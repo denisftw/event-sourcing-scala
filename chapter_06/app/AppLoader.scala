@@ -6,7 +6,7 @@ import play.api.db.evolutions.{DynamicEvolutions, EvolutionsComponents}
 import play.api.routing.Router
 import router.Routes
 import com.softwaremill.macwire._
-import controllers._
+import controllers.{AnswerController, _}
 import dao._
 import scalikejdbc.config.DBs
 import security.{UserAuthAction, UserAwareAction}
@@ -36,8 +36,11 @@ trait AppComponents extends BuiltInComponents
   lazy val authController = wire[AuthController]
   lazy val tagController = wire[TagController]
   lazy val questionController = wire[QuestionController]
+  lazy val answerController = wire[AnswerController]
   lazy val questionEventProducer = wire[QuestionEventProducer]
   lazy val questionEventConsumer = wire[QuestionEventConsumer]
+  lazy val answerEventProducer = wire[AnswerEventProducer]
+  lazy val answerEventConsumer = wire[AnswerEventConsumer]
 
   lazy val logDao = wire[LogDao]
   lazy val readService = wire[ReadService]

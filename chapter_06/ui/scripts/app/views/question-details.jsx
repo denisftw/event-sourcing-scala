@@ -4,31 +4,27 @@ import { connect } from 'react-redux';
 
 class QuestionDetailsView extends React.Component {
   componentDidMount = () => {
-    axios.get("/api/questions").then(this.handleResponse);
+    const questionId = this.props.params['questionId'];
+    axios.get(`/api/questionThread/${questionId}`).then(this.handleResponse);
   };
   handleResponse = (response) => {
-    const questionId = this.props.params['questionId'];
     if (response.status == 200) {
-      const maybeIndex = response.data.findIndex((q) => {
-        return q.id == questionId;
+      this.props.dispatch({
+        type: 'question_thread_loaded',
+        data: response.data
       });
-      if (maybeIndex != -1) {
-        this.props.dispatch({
-          type: 'question_thread_loaded',
-          data: response.data[maybeIndex]
-        });
-      }
     }
   };
   render = () => {
-    if (this.props.questionThread == null || this.props.questionThread.id == null) {
+    if (this.props.questionThread == null ||
+      this.props.questionThread.question == null) {
       return <div className="question-thread-view-form">
         <div className="question-thread-view-form__body">
           <div className="question-thread-view-form__loading">Loading...</div>
         </div>
       </div>
     }
-    const question = this.props.questionThread;
+    const question = this.props.questionThread.question;
     return <div className="question-thread-view-form">
       <div className="question-thread-view-form__body">
         <div className="question-thread-view-form__tags">

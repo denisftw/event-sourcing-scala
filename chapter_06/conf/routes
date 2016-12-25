@@ -19,6 +19,13 @@ GET     /api/questions              controllers.QuestionController.getQuestions
 POST    /api/createQuestion         controllers.QuestionController.createQuestion
 POST    /api/deleteQuestion         controllers.QuestionController.deleteQuestion
 
+POST    /api/createAnswer           controllers.AnswerController.createAnswer
+POST    /api/deleteAnswer           controllers.AnswerController.deleteAnswer
+POST    /api/updateAnswer           controllers.AnswerController.updateAnswer
+POST    /api/upvoteAnswer           controllers.AnswerController.upvoteAnswer
+POST    /api/downvoteAnswer         controllers.AnswerController.downvoteAnswer
+GET     /api/questionThread/:id     controllers.QuestionController.getQuestionThread(id: java.util.UUID)
+
 # Security
 GET     /login                      controllers.AuthController.login
 POST    /login                      controllers.AuthController.doLogin

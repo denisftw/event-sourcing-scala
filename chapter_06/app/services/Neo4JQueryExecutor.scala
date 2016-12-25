@@ -5,7 +5,7 @@ import java.util.UUID
 import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
-case class Neo4JUpdate(queries: Seq[Neo4JQuery])
+case class Neo4JUpdate(queries: Seq[Neo4JQuery], updateId: Option[UUID] = None)
 case class Neo4JQuery(query: String, params: Map[String, AnyRef]) {
   def paramsAsJava: java.util.Map[String, AnyRef] = {
     import collection.JavaConversions._

@@ -6,4 +6,5 @@ package services
 class ConsumerAggregator(
     tagEventConsumer: TagEventConsumer,
     logRecordConsumer: LogRecordConsumer,
-    questionEventConsumer: QuestionEventConsumer)
+    questionEventConsumer: QuestionEventConsumer,
+    answerEventConsumer: AnswerEventConsumer)

@@ -5,6 +5,7 @@ import akka.actor.{Actor, Props}
 import com.appliedscala.events.LogRecord
 import java.util.UUID
 
+import com.appliedscala.events.answer._
 import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
@@ -184,6 +185,155 @@ class ValidationActor extends Actor {
     }
   }
 
+  private def updateAnswerCreated(answerId: UUID, userId: UUID,
+      questionId: UUID): Option[String] = {
+    invokeUpdate {
+      NamedDB('validation).localTx { implicit session =>
+        sql"""insert into answer_user(answer_id, user_id)
+             values(${answerId}, ${userId})""".update().apply()
+        sql"""insert into question_answer(question_id, answer_id)
+             values(${questionId}, ${answerId})""".update().apply()
+      }
+    }
+  }
+
+  private def validateAnswerCreated(answerId: UUID, userId: UUID,
+      questionId: UUID): Option[String] = {
+    validateUser(userId) {
+      val resultT = Try {
+        NamedDB('validation).readOnly { implicit session =>
+          val questionExists =
+            sql"select * from question_user where question_id = ${questionId}".
+              map(_.string("question_id")).headOption().apply().isDefined
+          val answerExists =
+            sql"select * from answer_user where answer_id = ${answerId}".
+              map(_.string("answer_id")).headOption().apply().isDefined
+          val alreadyWritten =
+            sql"""select user_id from answer_user au inner join
+               question_answer qa on au.answer_id = qa.answer_id
+               where question_id = ${questionId} and user_id = ${userId}""".
+              map(_.string("user_id")).headOption().apply().isDefined
+          (questionExists, answerExists, alreadyWritten)
+        }
+      }
+
+      resultT match {
+        case Success((false, _, _)) => Some("This question doesn't exist!")
+        case Success((_, _, true)) =>
+          Some("Users can only give one answer to the question!")
+        case Success((_, true, _)) => Some("This answer already exists!")
+        case Success((true, _, _)) => None
+        case Failure(_) => Some("Validation state exception!")
+      }
+    }
+  }
+
+  private def validateAnswerDeleted(answerId: UUID, userId: UUID): Option[String] = {
+    validateUser(userId) {
+      val UserIdStr = userId.toString
+      val maybeAnswerOwnerT = Try {
+        NamedDB('validation).readOnly { implicit session =>
+          sql"select user_id from answer_user where answer_id = ${answerId}".
+            map(_.string("user_id")).headOption().apply()
+        }
+      }
+      maybeAnswerOwnerT match {
+        case Success(None) => Some("The answer doesn't exists")
+        case Success(Some(UserIdStr)) => None
+        case Success(Some(_)) => Some("The answer was written by another user!")
+        case _ => Some("Validation state exception!")
+      }
+    }
+  }
+
+  private def updateAnswerDeleted(answerId: UUID): Option[String] = {
+    invokeUpdate {
+      NamedDB('validation).localTx { implicit session =>
+        sql"delete from answer_user where answer_id = ${answerId}".update().apply()
+      }
+    }
+  }
+
+  private def validateAnswerUpdated(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+    val UserIdStr = userId.toString
+    val maybeAnswerOwnerT = Try {
+      NamedDB('validation).readOnly { implicit session =>
+        sql"select user_id from answer_user where answer_id = ${answerId}".
+          map(_.string("user_id")).headOption().apply()
+      }
+    }
+    maybeAnswerOwnerT match {
+      case Success(None) => Some("The answer doesn't exists")
+      case Success(Some(UserIdStr)) => None
+      case Success(Some(_)) => Some("The answer was written by another user!")
+      case _ => Some("Validation state exception!")
+    }
+  }
+
+  private def updateAnswerUpdated(): Option[String] = None
+
+  private def validateAnswerUpvoted(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+    val UserIdStr = userId.toString
+    val resultT = Try {
+      NamedDB('validation).readOnly { implicit session =>
+        val questionExists =
+          sql"select * from question_user where question_id = ${questionId}".
+            map(_.string("question_id")).headOption().apply().isDefined
+        val answerAuthor =
+          sql"select user_id from answer_user where answer_id = ${answerId}".
+            map(_.string("user_id")).headOption().apply()
+        val alreadyUpvoted =
+          sql"""select upvoted_by_user_id from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}""".
+            map(_.string("upvoted_by_user_id")).headOption().apply().isDefined
+        (questionExists, answerAuthor, alreadyUpvoted)
+      }
+    }
+    resultT match {
+      case Success((false, _, _)) => Some("This question doesn't exist!")
+      case Success((_, None, _)) => Some("This answer doesn't exist!")
+      case Success((_, Some(UserIdStr), _)) => Some("Users cannot like their own answers!")
+      case Success((_, Some(_), true)) => Some("Users cannot like answers more than once!")
+      case Success((_, Some(_), false)) => None
+      case _ => Some("Validation state exception!")
+    }
+  }
+
+  private def updateAnswerUpvoted(answerId: UUID, userId: UUID): Option[String] = {
+    invokeUpdate {
+      NamedDB('validation).localTx { implicit session =>
+        sql"insert into answer_upvoter(answer_id, upvoted_by_user_id) values(${answerId}, ${userId})".update().apply()
+      }
+    }
+  }
+
+  private def validateAnswerDownvoted(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+    val resultT = Try {
+      NamedDB('validation).readOnly { implicit session =>
+        val questionExists =
+          sql"select * from question_user where question_id = ${questionId}".
+            map(_.string("question_id")).headOption().apply().isDefined
+        val alreadyUpvoted =
+          sql"""select upvoted_by_user_id from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}""".
+            map(_.string("upvoted_by_user_id")).headOption().apply().isDefined
+        (questionExists, alreadyUpvoted)
+      }
+    }
+    resultT match {
+      case Success((false, _)) => Some("This question doesn't exist!")
+      case Success((_, true)) => None
+      case Success((_, false)) => Some("Users cannot downvote what they haven't upvoted")
+      case _ => Some("Validation state exception!")
+    }
+  }
+
+  private def updateAnswerDownvoted(answerId: UUID, userId: UUID): Option[String] = {
+    invokeUpdate {
+      NamedDB('validation).localTx { implicit session =>
+        sql"delete from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}".update().apply()
+      }
+    }
+  }
+
   private def updateQuestionCreated(questionId: UUID, userId: UUID, tags: Seq[UUID]): Option[String] = {
     invokeUpdate {
       NamedDB('validation).localTx { implicit session =>
@@ -279,6 +429,39 @@ class ValidationActor extends Actor {
         validateAndUpdate(skipValidation) {
           validateQuestionDeleted(decoded.questionId, decoded.deletedBy)
         } { updateQuestionDeleted(decoded.questionId) }
+      case AnswerCreated.actionName =>
+        val decoded = event.data.as[AnswerCreated]
+        validateAndUpdate(skipValidation) {
+          validateAnswerCreated(decoded.answerId,
+            decoded.createdBy, decoded.questionId)
+        } { updateAnswerCreated(decoded.answerId,
+          decoded.createdBy, decoded.questionId) }
+      case AnswerDeleted.actionName =>
+        val decoded = event.data.as[AnswerDeleted]
+        validateAndUpdate(skipValidation) {
+          validateAnswerDeleted(decoded.answerId,
+            decoded.deletedBy)
+        } { updateAnswerDeleted(decoded.answerId) }
+      case AnswerUpdated.actionName =>
+        val decoded = event.data.as[AnswerUpdated]
+        validateAndUpdate(skipValidation) {
+          validateAnswerUpdated(decoded.answerId,
+            decoded.updatedBy, decoded.questionId)
+        } { updateAnswerUpdated() }
+      case AnswerUpvoted.actionName =>
+        val decoded = event.data.as[AnswerUpvoted]
+        validateAndUpdate(skipValidation) {
+          validateAnswerUpvoted(decoded.answerId,
+            decoded.userId, decoded.questionId)
+        } { updateAnswerUpvoted(decoded.answerId,
+          decoded.userId) }
+      case AnswerDownvoted.actionName =>
+        val decoded = event.data.as[AnswerDownvoted]
+        validateAndUpdate(skipValidation) {
+          validateAnswerDownvoted(decoded.answerId,
+            decoded.userId, decoded.questionId)
+        } { updateAnswerDownvoted(decoded.answerId,
+          decoded.userId) }
       case _ => Some("Unknown event")
     }
   }
