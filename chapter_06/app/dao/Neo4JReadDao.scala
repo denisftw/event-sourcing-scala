@@ -81,20 +81,25 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
       case AnswerCreated.actionName =>
         val decoded = record.data.as[AnswerCreated]
         Neo4JUpdate(createAnswer(decoded.answerId, decoded.questionId,
-          decoded.createdBy, decoded.answerText, decoded.created))
+          decoded.createdBy, decoded.answerText, decoded.created),
+          updateId = Some(decoded.questionId))
       case AnswerUpdated.actionName =>
         val decoded = record.data.as[AnswerUpdated]
         Neo4JUpdate(updateAnswer(decoded.answerId,
-          decoded.answerText, decoded.updated))
+          decoded.answerText, decoded.updated),
+          updateId = Some(decoded.questionId))
       case AnswerDeleted.actionName =>
         val decoded = record.data.as[AnswerDeleted]
-        Neo4JUpdate(deleteAnswer(decoded.answerId))
+        Neo4JUpdate(deleteAnswer(decoded.answerId),
+          updateId = Some(decoded.questionId))
       case AnswerUpvoted.actionName =>
         val decoded = record.data.as[AnswerUpvoted]
-        Neo4JUpdate(upvoteAnswer(decoded.answerId, decoded.userId))
+        Neo4JUpdate(upvoteAnswer(decoded.answerId, decoded.userId),
+          updateId = Some(decoded.questionId))
       case AnswerDownvoted.actionName =>
         val decoded = record.data.as[AnswerDownvoted]
-        Neo4JUpdate(downvoteAnswer(decoded.answerId, decoded.userId))
+        Neo4JUpdate(downvoteAnswer(decoded.answerId, decoded.userId),
+          updateId = Some(decoded.questionId))
       case _ => Neo4JUpdate(Nil)
     }
   }
@@ -297,7 +302,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
   }
 
   private def downvoteAnswer(answerId: UUID, userId: UUID): Seq[Neo4JQuery] = {
-    val update = """MATCH (a:Answer { id: {answerId} })-[r:LIKES|IS_LIKED]-(
+    val update = """MATCH (a:Answer { id: {answerId} })-[r:UPVOTES|IS_UPVOTED]-(
          u:User { id: {userId} } ) DELETE r"""
     Seq(Neo4JQuery(update, Map(
       "answerId" -> answerId.toString, "userId" -> userId.toString)))
@@ -306,7 +311,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
   private def upvoteAnswer(answerId: UUID, userId: UUID): Seq[Neo4JQuery] = {
     val update =
       """MATCH (a:Answer { id: {answerId} }), (u:User
-        { id: {userId} }) CREATE (u)-[ha:LIKES]->(a)-[il:IS_LIKED]->(u)"""
+        { id: {userId} }) CREATE (u)-[ha:UPVOTES]->(a)-[il:IS_UPVOTED]->(u)"""
     Seq(Neo4JQuery(update, Map(
       "answerId" -> answerId.toString, "userId" -> userId.toString)))
   }

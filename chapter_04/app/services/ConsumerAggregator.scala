@@ -5,4 +5,5 @@ package services
   */
 class ConsumerAggregator(
     tagEventConsumer: TagEventConsumer,
+    userEventConsumer: UserEventConsumer,
     logRecordConsumer: LogRecordConsumer)

@@ -42,7 +42,7 @@ class AppComponent {
         data: data['updateData']
       });
     }
-    else if (data['updateType'] == 'question_thread') {
+    else if (data['updateType'] == 'questionThread') {
       this.store.dispatch({
         type: 'question_thread_updated',
         data: data['updateData']

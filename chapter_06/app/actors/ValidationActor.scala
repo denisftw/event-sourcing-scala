@@ -9,6 +9,7 @@ import com.appliedscala.events.answer._
 import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
+import play.api.Logger
 import scalikejdbc._
 
 import scala.util.{Failure, Success, Try}
@@ -361,6 +362,9 @@ class ValidationActor extends Actor {
         sql"delete from active_users where 1 > 0".update().apply()
         sql"delete from question_user where 1 > 0".update.apply()
         sql"delete from tag_question where 1 > 0".update().apply()
+        sql"delete from answer_user where 1 > 0".update().apply()
+        sql"delete from question_answer where 1 > 0".update.apply()
+        sql"delete from answer_upvoter where 1 > 0".update().apply()
       }
     }
   }
@@ -387,7 +391,9 @@ class ValidationActor extends Actor {
       events.foreach { event =>
         lastResult match {
           case None => lastResult = processSingleEvent(event, skipValidation)
-          case Some(_) => break()
+          case Some(error) =>
+            Logger.error(s"Error occurred while processing event: ${error}")
+            break()
         }
       }
     }

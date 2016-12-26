@@ -18,12 +18,10 @@ import scala.concurrent.duration.Duration
 import scala.util.{Success, Try}
 
 class AuthService(sessionDao: SessionDao, userDao: UserDao,
-    actorSystem: ActorSystem, configuration: Configuration) {
+    userEventProducer: UserEventProducer) {
 
   val mda = MessageDigest.getInstance("SHA-512")
   val cookieHeader = "X-Auth-Token"
-  val kafkaProducer = new ServiceKafkaProducer("users",
-    actorSystem, configuration)
 
   def login(userCode: String, password: String): Try[Cookie] = {
     val userT = userDao.checkUser(userCode, password)
@@ -35,9 +33,7 @@ class AuthService(sessionDao: SessionDao, userDao: UserDao,
   def register(userCode: String, fullName: String, password: String): Try[Cookie] = {
     val userT = userDao.insertUser(userCode, fullName, password)
     userT.flatMap { user =>
-      val event = UserActivated(user.userId)
-      val record = LogRecord.fromEvent(event)
-      kafkaProducer.send(record.encode)
+      userEventProducer.activateUser(user.userId)
       createCookie(user)
     }
   }

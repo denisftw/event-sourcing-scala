@@ -14,7 +14,7 @@ import util.ServiceKafkaConsumer
 class LogRecordConsumer(logDao: LogDao, actorSystem: ActorSystem,
     configuration: Configuration, materializer: Materializer) {
 
-  val topics = Seq("tags", "users").toSet
+  val topics = Seq("tags", "users", "questions").toSet
   val serviceKafkaConsumer = new ServiceKafkaConsumer(topics,
     "log", materializer, actorSystem, configuration, handleEvent)
 

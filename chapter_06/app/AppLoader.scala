@@ -42,6 +42,9 @@ trait AppComponents extends BuiltInComponents
   lazy val answerEventProducer = wire[AnswerEventProducer]
   lazy val answerEventConsumer = wire[AnswerEventConsumer]
 
+  lazy val userEventConsumer = wire[UserEventConsumer]
+  lazy val userEventProducer = wire[UserEventProducer]
+
   lazy val logDao = wire[LogDao]
   lazy val readService = wire[ReadService]
 
