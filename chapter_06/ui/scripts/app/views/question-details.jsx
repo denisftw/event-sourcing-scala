@@ -84,20 +84,25 @@ class QuestionDetailsView extends React.Component {
       <div className="question-thread-view-form__answers">
         {answers.map((answer) => {
           const updatedDate = moment(answer.updated).format('DD/MM/YYYY');
-          const authorName = answer.authorFullName;
           const upvotes = answer.upvotes;
-          const upvoteButtonDisabled = !maybeUserId || answer.authorId == maybeUserId;
-          const deleteButtonDisabled = !maybeUserId || answer.authorId != maybeUserId;
+          const upvoteButtonDisabled = !maybeUserId ||
+            answer.authorId == maybeUserId;
+          const deleteButtonDisabled = !maybeUserId ||
+            answer.authorId != maybeUserId;
           const alreadyUpvoted = !!maybeUserId && upvotes.findIndex((id) => {
               return id == maybeUserId; }) != -1;
           const upvoteButton = alreadyUpvoted ?
-            <button type="button" onClick={this.downvoteAnswer(question.id, answer.answerId)}
-                    disabled={upvoteButtonDisabled} className="btn btn-default">Downvote</button> :
-            <button type="button" onClick={this.upvoteAnswer(question.id, answer.answerId)}
-                    disabled={upvoteButtonDisabled} className="btn btn-default">Upvote</button>;
-
-          const answerWritten = `Answer written by ${authorName}, last updated on ${updatedDate}`;
-          return <div className="question-thread-view-form__answer-one" key={answer.answerId}>
+            <button type="button" className="btn btn-default"
+                onClick={this.downvoteAnswer(question.id, answer.answerId)}
+                disabled={upvoteButtonDisabled}>Downvote</button> :
+            <button type="button"  className="btn btn-default"
+                onClick={this.upvoteAnswer(question.id, answer.answerId)}
+                disabled={upvoteButtonDisabled}>Upvote</button>;
+          const authorName = answer.authorFullName;
+          const answerWritten =
+            `Answer written by ${authorName}, last updated on ${updatedDate}`;
+          return <div className="question-thread-view-form__answer-one"
+                      key={answer.answerId}>
             <div className="question-thread-view-form__answer-one__author-date">
               {answerWritten}
             </div>
@@ -109,7 +114,8 @@ class QuestionDetailsView extends React.Component {
                 <div className="btn-group btn-group-xs" role="group">
                   {upvoteButton}
                   <button type="button" disabled="disabled"
-                          className="btn btn-default button-stat-indicator">{upvotes.length}</button>
+                          className="btn btn-default button-stat-indicator">
+                    {upvotes.length}</button>
                 </div>
               </div>
               <div className="button-container">
