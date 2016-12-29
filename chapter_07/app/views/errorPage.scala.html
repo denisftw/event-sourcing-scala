@@ -1,0 +1,19 @@
+@()
+
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="@routes.Assets.versioned("compiled/styles.css")">
+        <link rel="icon" href="@routes.Assets.versioned("images/favicon.ico")">
+        <title>Error occurred</title>
+    </head>
+    <body>
+        <div class="login-page">
+            @views.html.templates.logoPanel()
+            <div class="login-page__explanation-panel">
+                Error occurred while executing the request. Please return to the home page
+            </div>
+        </div>
+    </body>
+</html>
