@@ -33,6 +33,7 @@ class AppComponent {
     }
   };
   updateReceived = (data) => {
+    console.log('Data received: ', data);
     if (data['updateType'] == 'tags') {
       this.store.dispatch({
         type: 'tags_updated',
@@ -57,7 +58,7 @@ class AppComponent {
         messageType: 'error',
         messageText: data['error']
       });
-    } else if (data['stateRebuilt'] != null) {
+    } else if (data['updateType'] == 'stateRebuilt') {
       this.store.dispatch({
         type: 'state_rebuilt',
         data: true
@@ -88,6 +89,7 @@ class AppComponent {
         updatedState['refreshNeeded'] = true;
       }
 
+      console.log('updatedState', updatedState);
       return updatedState;
     };
     this.store = createStore(reducer);

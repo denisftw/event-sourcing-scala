@@ -8,7 +8,7 @@ class HomeComposite extends React.Component {
     window.location.reload();
   };
   render = () => {
-    const refreshPanel = this.props.updateNeeded ?
+    const refreshPanel = this.props.refreshNeeded ?
       <div className="view-home-composite__refresh-panel"
            onClick={this.refresh}>
         Server data was updated. Click to refresh the page</div> : "";
