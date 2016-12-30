@@ -2,7 +2,7 @@ package util
 
 import java.util.UUID
 
-import actors.EventStreamActor
+import actors.{EventStreamActor, WSStreamActor}
 import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
 import services.ValidationService
@@ -22,8 +22,8 @@ class EventValidator(validationService: ValidationService,
     maybeErrorMessageF.map {
       case Some(errorMessage) =>
         val actorSelection = actorSystem.actorSelection(
-          EventStreamActor.userSpecificPathPattern(userId))
-        actorSelection ! EventStreamActor.ErrorOccurred(errorMessage)
+          WSStreamActor.userSpecificPathPattern(userId))
+        actorSelection ! WSStreamActor.ErrorOccurred(errorMessage)
       case None =>
         kafkaProducer.send(event.encode)
     }

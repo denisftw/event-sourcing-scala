@@ -18,10 +18,15 @@ class AppComponent {
     const reactDiv = document.getElementById('reactDiv');
     if (!!reactDiv) {
       this.initLoginRedirecting();
+      this.connectToWSEndpoint();
       this.initAppState();
-      this.connectToSSEEndpoint();
+      // this.connectToSSEEndpoint();
       this.renderComponent(reactDiv);
     }
+  };
+  connectToWSEndpoint = () => {
+    this.streamWS = new WebSocket("ws://localhost:9000/api/wsStream");
+    this.streamWS.onmessage = this.onServerSideEvent;
   };
   connectToSSEEndpoint = () => {
     this.es = new EventSource("/api/sse");
@@ -65,6 +70,24 @@ class AppComponent {
       });
     }
   };
+  useWS = (callback) => {
+    if (this.streamWS.readyState === 1) {
+      callback();
+    } else {
+      setTimeout(() => {
+        this.useWS(callback);
+      }, 1000);
+    }
+  };
+  updateQuestionThreadId = (action) => {
+    this.useWS(() => {
+      if (action.type == 'question_thread_updated' ||
+        action.type == 'question_thread_loaded') {
+        const questionThreadId = action.data.question.id;
+        this.streamWS.send(`{"questionThreadId": "${questionThreadId}"}`);
+      }
+    });
+  };
   initAppState = () => {
     const initialState = {
       tags: [],
@@ -88,6 +111,8 @@ class AppComponent {
       } else if (actionType == 'state_rebuilt') {
         updatedState['refreshNeeded'] = true;
       }
+
+      this.updateQuestionThreadId(action);
 
       console.log('updatedState', updatedState);
       return updatedState;

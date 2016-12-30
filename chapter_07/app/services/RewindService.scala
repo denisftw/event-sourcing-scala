@@ -1,10 +1,9 @@
 package services
 
-import actors.{EventStreamActor, ValidationActor}
+import actors.{EventStreamActor, ValidationActor, WSStreamActor}
 import dao.{LogDao, Neo4JReadDao}
 import model.ServerSentMessage
 import org.joda.time.DateTime
-
 import play.api.libs.json.JsBoolean
 
 import scala.concurrent.{Await, Future}
@@ -83,8 +82,8 @@ def refreshState(upTo: Option[DateTime]): Try[Unit] = {
       Logger.info("The state was successfully rebuild")
       val update = ServerSentMessage.create("stateRebuilt",
         JsBoolean.apply(true))
-      val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
-      esActor ! EventStreamActor.DataUpdated(update.json)
+      val esActor = actorSystem.actorSelection(WSStreamActor.pathPattern)
+      esActor ! WSStreamActor.DataUpdated(update.json)
   }
   resultT
 }

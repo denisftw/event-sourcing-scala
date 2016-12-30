@@ -14,6 +14,7 @@ POST    /api/createTag              controllers.TagController.createTag
 POST    /api/deleteTag              controllers.TagController.deleteTag
 GET     /api/tags                   controllers.TagController.getTags
 GET     /api/sse                    controllers.MainController.serverEventStream
+GET     /api/wsStream               controllers.MainController.wsStream
 POST    /api/rewind                 controllers.AdminController.rewind
 GET     /admin                      controllers.AdminController.admin
 GET     /api/questions              controllers.QuestionController.getQuestions

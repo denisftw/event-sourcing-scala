@@ -1,6 +1,6 @@
 package services
 
-import actors.EventStreamActor
+import actors.{EventStreamActor, WSStreamActor}
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import com.appliedscala.events.LogRecord
@@ -31,8 +31,8 @@ class TagEventConsumer(neo4JReadDao: Neo4JReadDao, actorSystem: ActorSystem,
     val tagsT = neo4JReadDao.getAllTags
     tagsT.foreach { tags =>
       val update = ServerSentMessage.create("tags", tags)
-      val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
-      esActor ! EventStreamActor.DataUpdated(update.json)
+      val esActor = actorSystem.actorSelection(WSStreamActor.pathPattern)
+      esActor ! WSStreamActor.DataUpdated(update.json)
     }
   }
 }
