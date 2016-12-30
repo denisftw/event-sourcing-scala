@@ -29,10 +29,12 @@ private def adjustReadState(logRecord: LogRecord): Unit = {
   neo4JReadDao.handleEventWithUpdate(logRecord) { maybeUpdateId =>
     maybeUpdateId.foreach { updateId =>
       val threadT = readService.getQuestionThread(updateId)
-      threadT.foreach { thread =>
-        val update = ServerSentMessage.create("questionThread", thread)
-        val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
-        esActor ! EventStreamActor.DataUpdated(update.json)
+      threadT.foreach { maybeThread =>
+        maybeThread.foreach { thread =>
+          val update = ServerSentMessage.create("questionThread", thread)
+          val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
+          esActor ! EventStreamActor.DataUpdated(update.json)
+        }
       }
     }
   }
