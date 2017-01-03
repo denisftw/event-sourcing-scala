@@ -20,16 +20,6 @@ In fact, the project from chapter 1 is based on the Activator template. This tem
 * React, Redux, React Router for implementing the frontend
 * Websockets for communicating with the frontend
 
-Note that throughout the book we utilize different supporting technologies, and their number increases as we progress:
-
-|chapter|prerequisites|
-|-----|------------|
-|`chapter_01`|Java, Activator, NodeJS, PostgreSQL|
-|`chapter_02`|Java, Activator, NodeJS, PostgreSQL|
-|`chapter_03`|Java, Activator, NodeJS, PostgreSQL, Kafka|
-|`chapter_04`|Java, Activator, NodeJS, PostgreSQL, Kafka, Neo4J|
-|`chapter_05`|Java, Activator, NodeJS, PostgreSQL, Kafka, Neo4J|
-|`chapter_06`|Java, Activator, NodeJS, PostgreSQL, Kafka, Neo4J|
-|`chapter_07`|Java, Activator, NodeJS, PostgreSQL, Kafka, Neo4J|
+Note that throughout the book we utilize different supporting technologies, and their number increases as we progress. For example, chapter 3 requires the Kafka server running, whereas chapter 4 also assumes that you have Neo4J running as well.
 
 The frontend sources are separated from the backend and reside in the `ui` directory. All styles are included so that the application looks decent enough from the very beginning. The complete SASS source of Bootstrap (together with Glyphicons) is included for easy use.
