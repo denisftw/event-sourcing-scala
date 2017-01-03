@@ -22,68 +22,69 @@ All styles are included so that the application looks decent enough from the ver
 ## Getting started
 
 Since this template is based on Activator, I assume that you already have JDK8 installed.
-  In addition, you will also need to have PostgreSQL 9.5 installed to run the app. If you're using an up-to-date version of Ubuntu, this is easy to do:
 
-  ```
-  $ sudo apt-get install postgresql-9.5 postgresql-contrib-9.5 pgadmin3
-  ```
+In addition, you will also need to have PostgreSQL 9.5 installed to run the app. If you're using an up-to-date version of Ubuntu, this is easy to do:
 
-  Make sure that the PostgreSQL server is up and running and create a new user:
+```
+$ sudo apt-get install postgresql-9.5 postgresql-contrib-9.5 pgadmin3
+```
 
-  ```
-  $ /usr/bin/sudo -u postgres psql --command "CREATE USER scalauser WITH SUPERUSER PASSWORD 'scalapass';"
-  ```
+Make sure that the PostgreSQL server is up and running and create a new user:
 
-  Then, create a new database for our authentication mechanism:
+```
+$ /usr/bin/sudo -u postgres psql --command "CREATE USER scalauser WITH SUPERUSER PASSWORD 'scalapass';"
+```
 
-  ```
-  $ /usr/bin/sudo -u postgres createdb -O scalauser authdb
-  ```
+Then, create a new database for our authentication mechanism:
 
-  The application also utilizes a frontend workflow based on NodeJS. This means that you'll need to have two NodeJS tools installed - `node` and `npm`. Since NodeJS is in constant development, I recommend you install nvm - the NodeJS version manager. Just go to <a href="https://github.com/creationix/nvm#install-script">their website</a> and follow the instructions. Again, if you're on Ubuntu (or other Unix), everything is easy:
+```
+$ /usr/bin/sudo -u postgres createdb -O scalauser authdb
+```
 
-  ```
-  $ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
-  ```
+The application also utilizes a frontend workflow based on NodeJS. This means that you'll need to have two NodeJS tools installed - `node` and `npm`. Since NodeJS is in constant development, I recommend you install nvm - the NodeJS version manager. Just go to <a href="https://github.com/creationix/nvm#install-script">their website</a> and follow the instructions. Again, if you're on Ubuntu (or other Unix), everything is easy:
 
-  After `nvm` is installed, use it to obtain NodeJS itself:
+```
+$ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
+```
 
-  ```
-  $ nvm install v5.3.0
-  ```
+After `nvm` is installed, use it to obtain NodeJS itself:
 
-  Add this to the very end of your `.bashrc` to make sure that NodeJS 5.3.0 is used by default:
+```
+$ nvm install v5.3.0
+```
 
-  ```
-  nvm use v5.3.0 > /dev/null
-  ```
+Add this to the very end of your `.bashrc` to make sure that NodeJS 5.3.0 is used by default:
 
-  Open a new terminal and check that `npm` is available:
+```
+nvm use v5.3.0 > /dev/null
+```
 
-  ```
-  $ npm --version
-  3.3.12
-  ```
+Open a new terminal and check that `npm` is available:
 
-  Finally, go to the project directory and download frontend dependencies by typing the following:
+```
+$ npm --version
+3.3.12
+```
 
-  ```
-  $ npm install
-  ```
+Finally, go to the project directory and download frontend dependencies by typing the following:
 
-  `npm` will download necessary packages to `node_modules` (not under version control). It may take some time, but once it is done, you can finally start compilation of frontend assets by invoking the following script:
+```
+$ npm install
+```
 
-  ```
-  $ npm run watch
-  ```
+`npm` will download necessary packages to `node_modules` (not under version control). It may take some time, but once it is done, you can finally start compilation of frontend assets by invoking the following script:
 
-  Finally, use another terminal window to start Activator in debug mode:
+```
+$ npm run watch
+```
 
-  ```
-  $ ./activator -jvm-debug 9999
-  ```
+Finally, use another terminal window to start Activator in debug mode:
 
-  Note that Webpack is started in the monitor mode and recompile frontend assets after you change them. Once you start the Play application from Activator using the `run` command, it will also start monitoring backend source files for changes.
+```
+$ ./activator -jvm-debug 9999
+```
+
+Note that Webpack is started in the monitor mode and recompile frontend assets after you change them. Once you start the Play application from Activator using the `run` command, it will also start monitoring backend source files for changes.
 
 
 ## Versions used
