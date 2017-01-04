@@ -18,13 +18,16 @@ lazy val root = (project in file(".")).settings(commonSettings).enablePlugins(Pl
 pipelineStages := Seq(digest)
 routesGenerator := InjectedRoutesGenerator
 
+val scalikeJdbcVersion = "3.0.0-M3"
+
 libraryDependencies ++= Seq(
   jdbc,
   evolutions,
   "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided",
   "org.postgresql" % "postgresql" % "9.4.1207.jre7",
-  "org.scalikejdbc" %% "scalikejdbc"       % "2.4.2",
-  "org.scalikejdbc" %% "scalikejdbc-config"  % "2.4.2",
+  "org.scalikejdbc" %% "scalikejdbc"       % scalikeJdbcVersion,
+  "org.scalikejdbc" %% "scalikejdbc-config"  % scalikeJdbcVersion,
+  "org.scalikejdbc" %% "scalikejdbc-streams"  % scalikeJdbcVersion,
   "ch.qos.logback"  %  "logback-classic"   % "1.1.7",
   "de.svenkubiak" % "jBCrypt" % "0.4.1",
   "org.neo4j.driver" % "neo4j-java-driver" % "1.0.6",

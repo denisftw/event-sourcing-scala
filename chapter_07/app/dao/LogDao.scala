@@ -3,10 +3,13 @@ package dao
 
 import java.util.UUID
 
+import akka.NotUsed
+import akka.stream.scaladsl.Source
 import com.appliedscala.events.LogRecord
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import scalikejdbc._
+import scalikejdbc.streams._
 
 import scala.util.Try
 
@@ -22,6 +25,16 @@ class LogDao {
             values(${event.id}, ${event.action}, $jsonStr, ${event.timestamp})""".
         update().apply()
     }
+  }
+
+  def logRecordsStream(maybeUpTo: Option[DateTime]): Source[LogRecord, NotUsed] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val upTo = maybeUpTo.getOrElse(DateTime.now())
+    val publisher: DatabasePublisher[LogRecord] = NamedDB('eventstore).readOnlyStream {
+      sql"select * from logs where timestamp <= $upTo order by timestamp".map(rs2LogRecord).iterator
+    }
+    val source = Source.fromPublisher(publisher)
+    source
   }
 
   import scala.collection.mutable.ListBuffer
