@@ -6,13 +6,12 @@ class TagManager extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      text: '',
-      tags: []
+      text: ''
     };
   };
   addTag = () => {
     const text = this.state.text;
-    const isValid = this.state.tags.findIndex((el) => {
+    const isValid = this.props.tags.findIndex((el) => {
       return el.text === text;
     }) === -1;
     if (isValid) {
