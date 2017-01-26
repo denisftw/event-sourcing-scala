@@ -10,6 +10,7 @@ import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
 import scalikejdbc._
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -242,6 +243,19 @@ class ValidationActor extends Actor {
       }
     }
     lastResult
+  }
+
+  private def processEventsRecursive(events: Seq[LogRecord],
+      skipValidation: Boolean): Option[String] = {
+    @tailrec def loop(records: Seq[LogRecord]): Option[String] = {
+      records match {
+        case head :: tail =>
+          val result = processSingleEvent(head, skipValidation)
+          if (result.isDefined) result else loop(tail)
+        case Nil => None
+      }
+    }
+    loop(events)
   }
 
   private def processSingleEvent(event: LogRecord,
