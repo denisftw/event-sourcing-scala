@@ -22,7 +22,7 @@ class TagController(tagEventProducer: TagEventProducer,
   }
 
   def deleteTag() = userAuthAction { implicit request =>
-    deleteTagFrom.bindFromRequest.fold(
+    deleteTagForm.bindFromRequest.fold(
       formWithErrors => BadRequest,
       data => {
         tagEventProducer.deleteTag(data.id, request.user.userId)
@@ -49,7 +49,7 @@ class TagController(tagEventProducer: TagEventProducer,
     )(CreateTagData.apply)(CreateTagData.unapply)
   }
 
-  val deleteTagFrom = Form {
+  val deleteTagForm = Form {
     mapping(
       "id" -> uuid
     )(DeleteTagData.apply)(DeleteTagData.unapply)
