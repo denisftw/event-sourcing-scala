@@ -16,7 +16,7 @@ class ServiceKafkaConsumer(topicNames: Set[String], groupName: String,
     implicit val mat: Materializer, actorSystem: ActorSystem,
     configuration: Configuration, handleEvent: String => Unit) {
 
-  val config = configuration.getConfig("kafka").
+  val config = configuration.getOptional[Configuration]("kafka").
     getOrElse(throw new Exception("No config element for Kafka!")).
     underlying
 

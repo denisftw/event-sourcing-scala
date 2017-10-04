@@ -1,11 +1,12 @@
 package controllers
 
 import model.{NavigationData, WebPageData}
-import org.joda.time.DateTime
+import java.time.{Instant, ZoneId, ZoneOffset, ZonedDateTime => DateTime}
+
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.mvc.Controller
+import play.api.mvc.{AbstractController, Controller, ControllerComponents}
 import security.UserAuthAction
 import services.RewindService
 
@@ -14,8 +15,8 @@ import scala.util.{Failure, Success}
 /**
   * Created by denis on 12/29/16.
   */
-class AdminController(userAuthAction: UserAuthAction,
-    rewindService: RewindService) extends Controller {
+class AdminController(controllerComponents: ControllerComponents, userAuthAction: UserAuthAction,
+    rewindService: RewindService) extends AbstractController(controllerComponents) {
 
   def admin = userAuthAction { request =>
     if (request.user.isAdmin) {
@@ -29,7 +30,9 @@ class AdminController(userAuthAction: UserAuthAction,
       rewindRequestForm.bindFromRequest.fold(
         errors => BadRequest,
         data => {
-          val dateTime = new DateTime(data.destination)
+
+          val dateTime = DateTime.ofInstant(
+            Instant.ofEpochSecond(data.destination), ZoneId.of("UTC"))
           val resultT = rewindService.refreshState(Some(dateTime))
           resultT match {
             case Failure(th) =>

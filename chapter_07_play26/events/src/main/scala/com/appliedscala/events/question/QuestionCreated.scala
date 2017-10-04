@@ -2,7 +2,7 @@ package com.appliedscala.events.question
 
 import java.util.UUID
 import com.appliedscala.events.EventData
-import org.joda.time.DateTime
+import java.time.{ZonedDateTime => DateTime}
 import play.api.libs.json.{JsValue, Json, Reads}
 
 /**

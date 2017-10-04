@@ -8,7 +8,7 @@ import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
 import model.{Answer, Question, QuestionThread, Tag}
-import org.joda.time.DateTime
+import java.time.{ZonedDateTime => DateTime}
 import org.neo4j.driver.v1.Record
 import services.{Neo4JQuery, Neo4JQueryExecutor, Neo4JUpdate}
 import util.BaseTypes

@@ -8,15 +8,15 @@ import java.util.UUID
 
 import play.api.libs.json.Json
 import security.UserAuthAction
-import play.api.mvc.Controller
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{QuestionEventProducer, ReadService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class QuestionController(questionEventProducer: QuestionEventProducer,
-    userAuthAction: UserAuthAction, readService: ReadService) extends Controller {
+class QuestionController(controllerComponents: ControllerComponents, questionEventProducer: QuestionEventProducer,
+    userAuthAction: UserAuthAction, readService: ReadService) extends AbstractController(controllerComponents) {
 
 def createQuestion() = userAuthAction.async { implicit request =>
   createQuestionForm.bindFromRequest.fold(
@@ -42,7 +42,6 @@ def createQuestion() = userAuthAction.async { implicit request =>
   }
 
   import scala.util.{Failure, Success}
-  import play.api.mvc.Action
   def getQuestions = Action { implicit request =>
     val questionsT = readService.getAllQuestions
     questionsT match {

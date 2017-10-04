@@ -3,8 +3,8 @@ package com.appliedscala.events.answer
 import java.util.UUID
 
 import com.appliedscala.events.EventData
-import org.joda.time.DateTime
-import play.api.libs.json.{JsValue, Json, Reads}
+import java.time.{ZonedDateTime => DateTime}
+import play.api.libs.json._
 
 /**
   * Created by denis on 12/23/16.

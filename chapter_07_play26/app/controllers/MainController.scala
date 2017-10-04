@@ -1,7 +1,5 @@
 package controllers
 
-import java.util.UUID
-
 import model._
 import play.api.libs.json.JsValue
 import play.api.mvc._
@@ -9,10 +7,11 @@ import security.{UserAuthAction, UserAwareAction, UserAwareRequest}
 import akka.actor.ActorSystem
 import akka.stream.{Materializer, OverflowStrategy}
 import services.{ConsumerAggregator, RewindService}
-class MainController(userAuthAction: UserAuthAction,
+
+class MainController(controllerComponents: ControllerComponents, userAuthAction: UserAuthAction,
     userAwareAction: UserAwareAction, actorSystem: ActorSystem,
     consumerAggregator: ConsumerAggregator,
-    mat: Materializer) extends Controller {
+    mat: Materializer) extends AbstractController(controllerComponents) {
 
   def index = userAwareAction { request =>
     Ok(views.html.pages.react(buildNavData(request),

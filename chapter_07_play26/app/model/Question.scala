@@ -2,7 +2,7 @@ package model
 
 import java.util.UUID
 
-import org.joda.time.DateTime
+import java.time.{ZonedDateTime => DateTime}
 import play.api.libs.json.Json
 
 case class QuestionNaive(id: UUID, title: String,

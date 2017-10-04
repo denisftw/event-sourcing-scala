@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
 import com.appliedscala.events.answer._
-import org.joda.time.DateTime
+import java.time.{ZonedDateTime => DateTime}
 import play.api.Configuration
 import util.{EventValidator, ServiceKafkaProducer}
 

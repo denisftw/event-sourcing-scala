@@ -11,7 +11,7 @@ class ServiceKafkaProducer(topicName: String,
     actorSystem: ActorSystem, configuration: Configuration) {
 
   val bootstrapServers = configuration.
-    getString("kafka.bootstrap.servers").getOrElse(
+    getOptional[String]("kafka.bootstrap.servers").getOrElse(
     throw new Exception(
       "No config element for 'kafka.bootstrap.servers'!"))
 

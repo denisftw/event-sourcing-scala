@@ -2,7 +2,7 @@ package controllers
 
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.mvc.{Action, Controller, DiscardingCookie}
+import play.api.mvc._
 import security.UserAuthAction
 import services.AuthService
 
@@ -10,8 +10,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class AuthController(authService: AuthService,
-                     userAuthAction: UserAuthAction) extends Controller {
+class AuthController(controllerComponents: ControllerComponents, authService: AuthService,
+                     userAuthAction: UserAuthAction) extends AbstractController(controllerComponents) {
 
   def logout = userAuthAction { request =>
     authService.destroySession(request.request)

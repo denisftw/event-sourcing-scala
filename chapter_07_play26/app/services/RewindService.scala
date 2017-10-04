@@ -3,7 +3,7 @@ package services
 import actors.{EventStreamActor, ValidationActor, WSStreamActor}
 import dao.{LogDao, Neo4JReadDao}
 import model.ServerSentMessage
-import org.joda.time.DateTime
+import java.time.{ZonedDateTime => DateTime}
 import play.api.libs.json.JsBoolean
 
 import scala.concurrent.{Await, Future}

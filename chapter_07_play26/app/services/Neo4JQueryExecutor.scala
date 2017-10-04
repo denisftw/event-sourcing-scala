@@ -8,7 +8,7 @@ import scala.util.Try
 case class Neo4JUpdate(queries: Seq[Neo4JQuery], updateId: Option[UUID] = None)
 case class Neo4JQuery(query: String, params: Map[String, AnyRef]) {
   def paramsAsJava: java.util.Map[String, AnyRef] = {
-    import collection.JavaConversions._
+    import collection.JavaConverters._
     mapAsJavaMap(params)
   }
 }
@@ -20,7 +20,7 @@ import play.api.Configuration
 import org.neo4j.driver.v1._
 class Neo4JQueryExecutor(configuration: Configuration) {
 
-  val config = configuration.getConfig("neo4j").
+  val config = configuration.getOptional[Configuration]("neo4j").
     getOrElse(throw new Exception("No config element for Neo4J!")).underlying
 
   val driver = GraphDatabase.driver(config.getString("url"),
