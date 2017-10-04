@@ -1,0 +1,60 @@
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  display: none;
+  margin: 0;
+
+  /****************
+   ** NEW STYLES **
+   ****************/
+
+  list-style: none; /** Remove list bullets */
+  width: 100%; /** Set the width to 100% of it's parent */
+  padding: 0;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+/** Button Styles **/
+.dropdown button {
+  background: #FFFFFF;
+  color: #337ab7;
+  border: none;
+  margin: 0;
+  padding: 0;
+  //padding: 0.4em 0.8em;
+  font-size: 1.2em;
+  text-decoration: none;
+  border-bottom: 1px dashed #337ab7;
+}
+
+
+
+ul.dropdown-menu {
+  min-width: 190px;
+  li {
+    margin-right: 0;
+
+    /** List Item Styles **/
+    a {
+      display: block;
+      padding: 0.2em 0.8em;
+      text-decoration: none;
+      background: #FFFFFF;
+      color: #666;
+    }
+
+    /** List Item Hover Styles **/
+    a:hover {
+      background: #337ab7;
+      color: white;
+    }
+  }
+}

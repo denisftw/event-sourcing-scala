@@ -1,0 +1,40 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET     /                           controllers.MainController.index
+GET     /tags                       controllers.MainController.index
+GET     /ask                        controllers.MainController.index
+GET     /questions                  controllers.MainController.index
+GET     /questions/$unused<.*>      controllers.MainController.indexParam(unused)
+
+GET     /500                        controllers.MainController.error500
+
+POST    /api/createTag              controllers.TagController.createTag
+POST    /api/deleteTag              controllers.TagController.deleteTag
+GET     /api/tags                   controllers.TagController.getTags
+GET     /api/sse                    controllers.MainController.serverEventStream
+GET     /api/wsStream               controllers.MainController.wsStream
+POST    /api/rewind                 controllers.AdminController.rewind
+GET     /admin                      controllers.AdminController.admin
+GET     /api/questions              controllers.QuestionController.getQuestions
+POST    /api/createQuestion         controllers.QuestionController.createQuestion
+POST    /api/deleteQuestion         controllers.QuestionController.deleteQuestion
+
+POST    /api/createAnswer           controllers.AnswerController.createAnswer
+POST    /api/deleteAnswer           controllers.AnswerController.deleteAnswer
+POST    /api/updateAnswer           controllers.AnswerController.updateAnswer
+POST    /api/upvoteAnswer           controllers.AnswerController.upvoteAnswer
+POST    /api/downvoteAnswer         controllers.AnswerController.downvoteAnswer
+GET     /api/questionThread/:id     controllers.QuestionController.getQuestionThread(id: java.util.UUID)
+
+# Security
+GET     /login                      controllers.AuthController.login
+POST    /login                      controllers.AuthController.doLogin
+GET     /signup                     controllers.AuthController.register
+POST    /register                   controllers.AuthController.registerUser
+GET     /logout                     controllers.AuthController.logout
+
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

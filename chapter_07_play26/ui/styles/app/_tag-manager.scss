@@ -1,0 +1,34 @@
+.tag-manager {
+  display: block;
+  width: 100%;
+  .tag-manager__input-panel {
+    display: block;
+    width: 100%;
+    padding-top: 40px;
+    .tag-manager__input-panel__input {
+      width: 70%;
+      margin: 0 auto;
+    }
+  }
+  .tag-manager__cloud-panel {
+    padding-top: 20px;
+    display: block;
+    width: 100%;
+    .tag-manager__cloud-panel__available-tags {
+      width: 60%;
+      margin: 0 auto;
+
+      span {
+        margin-right: 8px;
+        padding: 4px;
+        margin-bottom: 6px;
+      }
+
+      .remove-tag-link {
+        padding-left: 10px;
+        color: white;
+        cursor: pointer;
+      }
+    }
+  }
+}

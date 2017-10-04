@@ -1,0 +1,65 @@
+.navigation-bar-component {
+  border-bottom: 1px solid #dedede;
+  padding: 12px;
+  & > div {
+    margin-bottom: 12px;
+  }
+  a {
+    font-size: 1.2em;
+  }
+  ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    li {
+      display: inline;
+      margin-right: 18px;
+    }
+  }
+  .navigation-bar__top-panel {
+    .navigation-bar__preferences-panel {
+      display: inline-block;
+
+    }
+    .navigation-bar__user-panel {
+      float: right;
+      display: inline-block;
+      a {
+        text-decoration: none;
+        border-bottom: 1px dashed #337ab7;
+        &:hover {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+  .navigation-bar__logo-panel {
+    margin-top: 24px;
+    margin-left: 8px;
+    margin-bottom: 0;
+    a {
+      text-decoration: initial;
+    }
+    img {
+      height: 64px;
+    }
+  }
+  .navigation-bar__pitch-panel {
+    padding-left: 5px;
+    a {
+      text-decoration: initial;
+    }
+    img {
+      height: 24px;
+    }
+  }
+  .navigation-bar__mid-panel {
+    margin-top: 36px;
+    border-top: 1px solid #dedede;
+    padding-top: 16px;
+
+  }
+  .navigation-bar__bottom-panel {
+
+  }
+}
