@@ -1,8 +1,8 @@
 package com.appliedscala.events
 
 import java.util.UUID
+import java.time.{ZoneId, ZonedDateTime => DateTime}
 
-import java.time.{ZonedDateTime => DateTime}
 import play.api.libs.json.{JsValue, Json}
 
 
@@ -24,6 +24,6 @@ object LogRecord {
   }
   def fromEvent(eventData: EventData): LogRecord = {
     LogRecord(UUID.randomUUID(), eventData.action,
-      eventData.json, DateTime.now())
+      eventData.json, DateTime.now(ZoneId.of("UTC")))
   }
 }

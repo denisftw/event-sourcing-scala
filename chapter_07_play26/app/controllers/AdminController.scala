@@ -1,14 +1,15 @@
 package controllers
 
 import model.{NavigationData, WebPageData}
-import java.time.{Instant, ZoneId, ZoneOffset, ZonedDateTime => DateTime}
+import java.time.{ZonedDateTime => DateTime}
 
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.mvc.{AbstractController, Controller, ControllerComponents}
+import play.api.mvc.{AbstractController, ControllerComponents}
 import security.UserAuthAction
 import services.RewindService
+import util.BaseTypes
 
 import scala.util.{Failure, Success}
 
@@ -30,10 +31,7 @@ class AdminController(controllerComponents: ControllerComponents, userAuthAction
       rewindRequestForm.bindFromRequest.fold(
         errors => BadRequest,
         data => {
-
-          val dateTime = DateTime.ofInstant(
-            Instant.ofEpochSecond(data.destination), ZoneId.of("UTC"))
-          val resultT = rewindService.refreshState(Some(dateTime))
+          val resultT = rewindService.refreshState(Some(data.destination))
           resultT match {
             case Failure(th) =>
               Logger.error("Error occurred while rewinding the events", th)
@@ -47,9 +45,9 @@ class AdminController(controllerComponents: ControllerComponents, userAuthAction
 
   val rewindRequestForm = Form {
     mapping(
-      "destination" -> longNumber
+      "destination" -> BaseTypes.zonedDateTimeMapping
     )(RewindRequestData.apply)(RewindRequestData.unapply)
   }
 
-  case class RewindRequestData(destination: Long)
+  case class RewindRequestData(destination: DateTime)
 }

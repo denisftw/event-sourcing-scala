@@ -1,9 +1,10 @@
 package model
 
 import java.util.UUID
-
 import java.time.{ZonedDateTime => DateTime}
+
 import scalikejdbc.WrappedResultSet
+import util.BaseTypes
 
 
 case class UserSession(sessionId: UUID, token: String, userId: UUID,
@@ -17,7 +18,7 @@ object UserSession {
   }
 
   def create(user: User, token: String, seconds: Long): UserSession = {
-    val time = DateTime.now()
+    val time = BaseTypes.dateTimeNow
     UserSession(UUID.randomUUID(), token, user.userId, time, time, seconds)
   }
 }

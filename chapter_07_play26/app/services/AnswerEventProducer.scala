@@ -5,9 +5,9 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
 import com.appliedscala.events.answer._
-import java.time.{ZonedDateTime => DateTime}
+
 import play.api.Configuration
-import util.{EventValidator, ServiceKafkaProducer}
+import util.{BaseTypes, EventValidator, ServiceKafkaProducer}
 
 import scala.concurrent.Future
 
@@ -23,7 +23,7 @@ class AnswerEventProducer(actorSystem: ActorSystem, configuration: Configuration
   def createAnswer(questionId: UUID, answerText: String,
                    createdBy: UUID): Future[Option[String]] = {
     val answerId = UUID.randomUUID()
-    val created = DateTime.now()
+    val created = BaseTypes.dateTimeNow
     val event = AnswerCreated(answerId, answerText,
       questionId, createdBy, created)
     val record = LogRecord.fromEvent(event)
@@ -39,7 +39,7 @@ class AnswerEventProducer(actorSystem: ActorSystem, configuration: Configuration
 
   def updateAnswer(questionId: UUID, answerId: UUID,
          updatedBy: UUID, answerText: String): Future[Option[String]] = {
-    val updated = DateTime.now()
+    val updated = BaseTypes.dateTimeNow
     val event = AnswerUpdated(answerId, answerText,
       questionId, updatedBy, updated)
     val record = LogRecord.fromEvent(event)

@@ -7,9 +7,11 @@ import akka.NotUsed
 import akka.stream.scaladsl.Source
 import com.appliedscala.events.LogRecord
 import java.time.{ZonedDateTime => DateTime}
+
 import play.api.libs.json.Json
 import scalikejdbc._
 import scalikejdbc.streams._
+import util.BaseTypes
 
 import scala.util.Try
 
@@ -29,7 +31,7 @@ class LogDao {
 
   def logRecordsStream(maybeUpTo: Option[DateTime]): Source[LogRecord, NotUsed] = {
     import scala.concurrent.ExecutionContext.Implicits.global
-    val upTo = maybeUpTo.getOrElse(DateTime.now())
+    val upTo = maybeUpTo.getOrElse(BaseTypes.dateTimeNow)
     val publisher: DatabasePublisher[LogRecord] = NamedDB('eventstore).readOnlyStream {
       sql"select * from logs where timestamp <= $upTo order by timestamp".map(rs2LogRecord).iterator
     }
@@ -41,7 +43,7 @@ class LogDao {
   def iterateLogRecords(maybeUpTo: Option[DateTime])(chunkSize: Int)
                        (handler: (Seq[LogRecord]) => Unit): Try[Unit] = Try {
     NamedDB('eventstore).readOnly { implicit session =>
-      val upTo = maybeUpTo.getOrElse(DateTime.now())
+      val upTo = maybeUpTo.getOrElse(BaseTypes.dateTimeNow)
       val buffer = ListBuffer[LogRecord]()
       sql"select * from logs where timestamp <= $upTo order by timestamp".
         foreach { wrs =>
