@@ -6,7 +6,8 @@ import play.api.mvc._
 import security.{UserAuthAction, UserAwareAction, UserAwareRequest}
 import akka.actor.ActorSystem
 import akka.stream.{Materializer, OverflowStrategy}
-import services.{ConsumerAggregator, RewindService}
+import play.api.http.ContentTypes
+import services.ConsumerAggregator
 
 class MainController(controllerComponents: ControllerComponents, userAuthAction: UserAuthAction,
     userAwareAction: UserAwareAction, actorSystem: ActorSystem,
@@ -29,7 +30,6 @@ class MainController(controllerComponents: ControllerComponents, userAuthAction:
   }
 
   import actors.EventStreamActor
-  import akka.stream.actor.ActorPublisher
   import play.api.libs.EventSource
   import akka.stream.scaladsl._
 
@@ -38,13 +38,13 @@ class MainController(controllerComponents: ControllerComponents, userAuthAction:
     implicit val actorFactory = actorSystem
     val maybeUser = request.user
     val maybeUserId = maybeUser.map(_.userId)
-    val actorRef = actorSystem.actorOf(EventStreamActor.props(),
+    val (out, publisher) = Source.actorRef[JsValue](
+      bufferSize = 16, OverflowStrategy.dropNew)
+      .toMat(Sink.asPublisher(fanout = false))(Keep.both).run()
+    actorSystem.actorOf(EventStreamActor.props(out),
       EventStreamActor.name(maybeUserId))
-    val eventStorePublisher = Source.
-      fromPublisher(ActorPublisher[JsValue](actorRef)).
-      runWith(Sink.asPublisher(fanout = true))
-    val source = Source.fromPublisher(eventStorePublisher)
-    Ok.chunked(source.via(EventSource.flow)).as("text/event-stream")
+    val source = Source.fromPublisher(publisher)
+    Ok.chunked(source.via(EventSource.flow)).as(ContentTypes.EVENT_STREAM)
   }
 
   def wsStream = WebSocket.accept[JsValue, JsValue] { request =>
