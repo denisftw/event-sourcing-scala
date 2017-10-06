@@ -8,7 +8,7 @@ import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
 import model.{Answer, Question, QuestionThread, Tag}
-import java.time.{ZonedDateTime => DateTime}
+import java.time.ZonedDateTime
 import org.neo4j.driver.v1.Record
 import services.{Neo4JQuery, Neo4JQueryExecutor, Neo4JUpdate}
 import util.BaseTypes
@@ -209,7 +209,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
   }
 
   private def createQuestionUserQuery(questionId: UUID, title: String,
-      details: Option[String], addedBy: UUID, created: DateTime): Neo4JQuery = {
+      details: Option[String], addedBy: UUID, created: ZonedDateTime): Neo4JQuery = {
     val createdFmt = BaseTypes.formatISO8601(created)
     val detailsPart = details.getOrElse("")
     val createQuestion =
@@ -236,7 +236,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
   private def createQuestion(questionId: UUID, title: String,
        details: Option[String], addedBy: UUID, tagIds: Seq[UUID],
-       created: DateTime): Seq[Neo4JQuery] = {
+       created: ZonedDateTime): Seq[Neo4JQuery] = {
     val userQuery = createQuestionUserQuery(questionId, title, details,
       addedBy, created)
     val tagQuery = createQuestionTagQuery(questionId, tagIds)
@@ -264,7 +264,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
   }
 
   private def createAnswer(answerId: UUID, questionId: UUID, createdBy: UUID,
-      answerText: String, created: DateTime): Seq[Neo4JQuery] = {
+      answerText: String, created: ZonedDateTime): Seq[Neo4JQuery] = {
     val createdFmt = BaseTypes.formatISO8601(created)
     val createAnswer =
       """
@@ -285,7 +285,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
   }
 
   private def updateAnswer(answerId: UUID, updatedText: String,
-     updated: DateTime): Seq[Neo4JQuery] = {
+     updated: ZonedDateTime): Seq[Neo4JQuery] = {
     val updatedFmt = BaseTypes.formatISO8601(updated)
     val update =
       """

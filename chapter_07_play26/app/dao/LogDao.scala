@@ -6,7 +6,7 @@ import java.util.UUID
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import com.appliedscala.events.LogRecord
-import java.time.{ZonedDateTime => DateTime}
+import java.time.ZonedDateTime
 
 import play.api.libs.json.Json
 import scalikejdbc._
@@ -29,7 +29,7 @@ class LogDao {
     }
   }
 
-  def logRecordsStream(maybeUpTo: Option[DateTime]): Source[LogRecord, NotUsed] = {
+  def logRecordsStream(maybeUpTo: Option[ZonedDateTime]): Source[LogRecord, NotUsed] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     val upTo = maybeUpTo.getOrElse(BaseTypes.dateTimeNow)
     val publisher: DatabasePublisher[LogRecord] = NamedDB('eventstore).readOnlyStream {
@@ -40,7 +40,7 @@ class LogDao {
   }
 
   import scala.collection.mutable.ListBuffer
-  def iterateLogRecords(maybeUpTo: Option[DateTime])(chunkSize: Int)
+  def iterateLogRecords(maybeUpTo: Option[ZonedDateTime])(chunkSize: Int)
                        (handler: (Seq[LogRecord]) => Unit): Try[Unit] = Try {
     NamedDB('eventstore).readOnly { implicit session =>
       val upTo = maybeUpTo.getOrElse(BaseTypes.dateTimeNow)

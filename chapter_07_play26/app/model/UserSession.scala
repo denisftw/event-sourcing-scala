@@ -1,14 +1,14 @@
 package model
 
 import java.util.UUID
-import java.time.{ZonedDateTime => DateTime}
+import java.time.ZonedDateTime
 
 import scalikejdbc.WrappedResultSet
 import util.BaseTypes
 
 
 case class UserSession(sessionId: UUID, token: String, userId: UUID,
-                       created: DateTime, updated: DateTime, ttl: Long)
+                       created: ZonedDateTime, updated: ZonedDateTime, ttl: Long)
 
 object UserSession {
   def fromDb(rs: WrappedResultSet): UserSession = {

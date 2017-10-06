@@ -3,7 +3,7 @@ package services
 import actors.{EventStreamActor, ValidationActor, WSStreamActor}
 import dao.{LogDao, Neo4JReadDao}
 import model.ServerSentMessage
-import java.time.{ZonedDateTime => DateTime}
+import java.time.ZonedDateTime
 import play.api.libs.json.JsBoolean
 
 import scala.concurrent.{Await, Future}
@@ -30,7 +30,7 @@ class RewindService(actorSystem: ActorSystem,
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.duration._
 
-  private def recreateState(upTo: Option[DateTime]): Try[Unit] = Try {
+  private def recreateState(upTo: Option[ZonedDateTime]): Try[Unit] = Try {
     val timeout = 5.seconds
     val bufferSize = 200
 
@@ -75,7 +75,7 @@ class RewindService(actorSystem: ActorSystem,
 
   import play.api.Logger
 
-  def refreshState(upTo: Option[DateTime]): Try[Unit] = {
+  def refreshState(upTo: Option[ZonedDateTime]): Try[Unit] = {
     val resultT = recreateState(upTo)
     resultT match {
       case Failure(th) =>

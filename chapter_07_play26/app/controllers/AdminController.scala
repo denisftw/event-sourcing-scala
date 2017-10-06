@@ -1,7 +1,7 @@
 package controllers
 
 import model.{NavigationData, WebPageData}
-import java.time.{ZonedDateTime => DateTime}
+import java.time.ZonedDateTime
 
 import play.api.Logger
 import play.api.data.Form
@@ -49,5 +49,5 @@ class AdminController(controllerComponents: ControllerComponents, userAuthAction
     )(RewindRequestData.apply)(RewindRequestData.unapply)
   }
 
-  case class RewindRequestData(destination: DateTime)
+  case class RewindRequestData(destination: ZonedDateTime)
 }

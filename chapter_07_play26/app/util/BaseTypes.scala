@@ -9,8 +9,6 @@ import play.api.data.format.Formats.parsing
 import play.api.data.format.Formatter
 
 
-//import org.joda.time.format.ISODateTimeFormat
-
 /**
   * Created by denis on 12/10/16.
   */
@@ -26,9 +24,9 @@ object BaseTypes {
 
   implicit val zonedDateTimeFormatter = new Formatter[ZonedDateTime] {
     def bind(key: String, data: Map[String, String]) =
-      parsing(BaseTypes.parseISO8601, "error.zonedDateTime", Nil)(key, data)
+      parsing(parseISO8601, "error.zonedDateTime", Nil)(key, data)
     def unbind(key: String, value: ZonedDateTime) = Map(key ->
-      BaseTypes.formatISO8601(value))
+      formatISO8601(value))
   }
 
   val zonedDateTimeMapping: Mapping[ZonedDateTime] = of[ZonedDateTime]

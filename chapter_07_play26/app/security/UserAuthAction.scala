@@ -12,11 +12,11 @@ import scala.util.{Failure, Success}
 case class UserAuthRequest[A](user: User,
   request: Request[A]) extends  WrappedRequest[A](request)
 
-class UserAuthAction(authService: AuthService, ec: ExecutionContext,
-playBodyParsers: PlayBodyParsers)
+class UserAuthAction(authService: AuthService,
+  playBodyParsers: PlayBodyParsers,
+  override val executionContext: ExecutionContext)
 extends ActionBuilder[UserAuthRequest, AnyContent] {
 
-  override val executionContext = ec
   override def parser = playBodyParsers.defaultBodyParser
 
   def invokeBlock[A](request: Request[A],
