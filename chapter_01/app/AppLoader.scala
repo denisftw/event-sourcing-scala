@@ -1,4 +1,3 @@
-import controllers.Assets
 import play.api.ApplicationLoader.Context
 import play.api._
 import play.api.db.{DBComponents, HikariCPComponents}
@@ -6,8 +5,9 @@ import play.api.db.evolutions.{DynamicEvolutions, EvolutionsComponents}
 import play.api.routing.Router
 import router.Routes
 import com.softwaremill.macwire._
-import controllers._
+import _root_.controllers._
 import dao._
+import play.api.mvc.DefaultControllerComponents
 import scalikejdbc.config.DBs
 import security.{UserAuthAction, UserAwareAction}
 import services._
@@ -19,17 +19,21 @@ class AppLoader extends ApplicationLoader {
     LoggerConfigurator(context.environment.classLoader).foreach { configurator =>
       configurator.configure(context.environment)
     }
-    (new BuiltInComponentsFromContext(context) with AppComponents).application
+    new AppComponents(context).application
   }
 }
 
-trait AppComponents extends BuiltInComponents
- with EvolutionsComponents with DBComponents with HikariCPComponents {
-  lazy val assets: Assets = wire[Assets]
+class AppComponents(context: Context) extends BuiltInComponentsFromContext(context)
+  with EvolutionsComponents with DBComponents
+  with HikariCPComponents with AssetsComponents {
+
+  override lazy val controllerComponents = wire[DefaultControllerComponents]
   lazy val prefix: String = "/"
   lazy val router: Router = wire[Routes]
   lazy val maybeRouter = Option(router)
+
   override lazy val httpErrorHandler = wire[ProdErrorHandler]
+  override lazy val httpFilters = Seq()
 
   lazy val mainController = wire[MainController]
   lazy val authController = wire[AuthController]
