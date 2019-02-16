@@ -4,12 +4,12 @@ package controllers
 
 import play.api.libs.json.Json
 import security.UserAuthAction
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ReadService, TagEventProducer}
 
 
-class TagController(tagEventProducer: TagEventProducer,
-    userAuthAction: UserAuthAction, readService: ReadService) extends Controller {
+class TagController(components: ControllerComponents, tagEventProducer: TagEventProducer,
+    userAuthAction: UserAuthAction, readService: ReadService) extends AbstractController(components) {
 
   def createTag() = userAuthAction { implicit request =>
     createTagForm.bindFromRequest.fold(
@@ -32,8 +32,6 @@ class TagController(tagEventProducer: TagEventProducer,
   }
 
   import scala.concurrent.ExecutionContext.Implicits.global
-  import scala.concurrent.Future
-  import play.api.mvc.Action
   def getTags = Action.async { implicit request =>
     val tagsF = readService.getTags
     tagsF.map { tags => Ok(Json.toJson(tags)) }

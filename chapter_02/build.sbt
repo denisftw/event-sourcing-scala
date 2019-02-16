@@ -1,4 +1,4 @@
-name := """play-event-sourcing-starter"""
+name := """practical-event-sourcing-02"""
 
 val commonSettings = Seq(
   version := "1.0-SNAPSHOT",

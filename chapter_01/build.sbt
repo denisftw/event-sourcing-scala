@@ -1,4 +1,4 @@
-name := """play-event-sourcing-starter"""
+name := """practical-event-sourcing-01"""
 organization := "com.appliedscala.seeds.es"
 version := "1.0-SNAPSHOT"
 scalaVersion := "2.12.8"
