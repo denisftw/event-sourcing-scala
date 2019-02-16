@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
 import TagManager from './views/tag-manager.jsx';
-import MyComponent from './tutorial/text-component.jsx';
 
 
 class AppComponent {

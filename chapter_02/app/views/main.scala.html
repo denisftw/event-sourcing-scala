@@ -5,8 +5,8 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <link rel="stylesheet" href="@routes.Assets.versioned("compiled/styles.css")">
-        <link rel="icon" href="@routes.Assets.versioned("images/favicon.ico")">
+        <link rel="stylesheet" href="@routes.MainController.versioned("compiled/styles.css")">
+        <link rel="icon" href="@routes.MainController.versioned("images/favicon.ico")">
         <title>@pageData.title</title>
     </head>
     <body>
@@ -15,5 +15,5 @@
             @content
         </div>
     </body>
-    <script src="@routes.Assets.versioned("compiled/bundle.js")"></script>
+    <script src="@routes.MainController.versioned("compiled/bundle.js")"></script>
 </html>

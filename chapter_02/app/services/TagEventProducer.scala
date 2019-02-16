@@ -8,7 +8,7 @@ import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.{EventData, LogRecord}
 import dao.LogDao
 import model.Tag
-import org.joda.time.DateTime
+import java.time.ZonedDateTime
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -40,7 +40,7 @@ class TagEventProducer(actorSystem: ActorSystem,
 
   private def createLogRecord(eventData: EventData): LogRecord = {
     LogRecord(UUID.randomUUID(), eventData.action,
-      eventData.json, DateTime.now())
+      eventData.json, ZonedDateTime.now())
   }
 
   import java.util.concurrent.TimeUnit

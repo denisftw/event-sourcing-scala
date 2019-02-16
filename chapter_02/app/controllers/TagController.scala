@@ -4,12 +4,12 @@ package controllers
 
 import play.api.libs.json.Json
 import security.UserAuthAction
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{ReadService, TagEventProducer}
 
 
-class TagController(tagEventProducer: TagEventProducer,
-    userAuthAction: UserAuthAction, readService: ReadService) extends Controller {
+class TagController(components: ControllerComponents, tagEventProducer: TagEventProducer,
+    userAuthAction: UserAuthAction, readService: ReadService) extends AbstractController(components) {
 
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.Future
