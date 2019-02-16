@@ -1,14 +1,13 @@
 package services
 
-import java.util.UUID
-
 import scala.collection.mutable.ListBuffer
 import scala.util.Try
+import play.api.{Logger => PlayLogger}
 
 case class Neo4JUpdate(queries: Seq[Neo4JQuery])
 case class Neo4JQuery(query: String, params: Map[String, AnyRef]) {
   def paramsAsJava: java.util.Map[String, AnyRef] = {
-    import collection.JavaConversions._
+    import collection.JavaConverters._
     mapAsJavaMap(params)
   }
 }
@@ -20,11 +19,11 @@ import play.api.Configuration
 import org.neo4j.driver.v1._
 class Neo4JQueryExecutor(configuration: Configuration) {
 
-  val config = configuration.getConfig("neo4j").
-    getOrElse(throw new Exception("No config element for Neo4J!")).underlying
+  val log = PlayLogger(this.getClass)
+  val config = configuration.get[Configuration]("neo4j")
 
-  val driver = GraphDatabase.driver(config.getString("url"),
-    AuthTokens.basic(config.getString("username"), config.getString("password")))
+  val driver = GraphDatabase.driver(config.get[String]("url"),
+    AuthTokens.basic(config.get[String]("username"), config.get[String]("password")))
 
   private def doWithSession[A](block: Session => A): Try[A] = {
     val session = driver.session()
@@ -35,7 +34,7 @@ class Neo4JQueryExecutor(configuration: Configuration) {
     resultT
   }
 
-  import play.api.{Logger => PlayLogger}
+
   def executeBatch(updates: Seq[Neo4JQuery]): Try[Unit] = {
     val session = driver.session()
 
@@ -48,7 +47,7 @@ class Neo4JQueryExecutor(configuration: Configuration) {
       transaction.close()
     }
     result.recover { case th =>
-      PlayLogger.error("Error occurred while executing the Neo4J batch", th)
+      log.error("Error occurred while executing the Neo4J batch", th)
     }
     session.close()
     result
@@ -66,11 +65,8 @@ class Neo4JQueryExecutor(configuration: Configuration) {
   def executeQuery(query: Neo4JQuery): Try[Seq[Record]] = {
     doWithSession { session =>
       val result = session.run(query.query, query.paramsAsJava)
-      val recordBuffer = ListBuffer.newBuilder[Record]
-      while (result.hasNext) {
-        recordBuffer += result.next()
-      }
-      recordBuffer.result().toList
+      import collection.JavaConverters._
+      result.asScala.toList
     }
   }
 }

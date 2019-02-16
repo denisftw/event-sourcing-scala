@@ -1,8 +1,8 @@
 package services
 
 import actors.ValidationActor
-
 import dao.{LogDao, Neo4JReadDao}
+import play.api.Logger
 
 
 
@@ -14,6 +14,8 @@ import akka.actor.ActorSystem
 class RewindService(actorSystem: ActorSystem,
     neo4JReadDao: Neo4JReadDao, logDao: LogDao) {
 
+  val log = Logger(this.getClass)
+
   import play.api.Logger
   import scala.util.{Failure, Success}
   def refreshState(): Unit = {
@@ -24,9 +26,9 @@ class RewindService(actorSystem: ActorSystem,
         validationActor ! ValidationActor.RefreshStateCommand(
           events, fromScratch = true)
         neo4JReadDao.refreshState(events, fromScratch = true)
-        Logger.info("The state has been recreated from events")
+        log.info("The state has been recreated from events")
       case Failure(th) =>
-        Logger.error("Error occurred while rewinding the state", th)
+        log.error("Error occurred while rewinding the state", th)
     }
   }
 }
