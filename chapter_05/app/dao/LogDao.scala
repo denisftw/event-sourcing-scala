@@ -33,7 +33,7 @@ class LogDao {
   private def rs2LogRecord(rs: WrappedResultSet): LogRecord = {
     LogRecord(UUID.fromString(rs.string("record_id")),
       rs.string("action_name"), Json.parse(rs.string("event_data")),
-      rs.jodaDateTime("timestamp"))
+      rs.dateTime("timestamp"))
   }
 }
 

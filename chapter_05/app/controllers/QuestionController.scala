@@ -6,14 +6,15 @@ package controllers
 
 import play.api.libs.json.Json
 import security.UserAuthAction
-import play.api.mvc.Controller
+import play.api.mvc.{AbstractController, ControllerComponents}
 import services.{QuestionEventProducer, ReadService}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class QuestionController(questionEventProducer: QuestionEventProducer,
-    userAuthAction: UserAuthAction, readService: ReadService) extends Controller {
+class QuestionController(components: ControllerComponents, questionEventProducer: QuestionEventProducer,
+    userAuthAction: UserAuthAction, readService: ReadService) extends AbstractController(components) {
 
 def createQuestion() = userAuthAction.async { implicit request =>
   createQuestionForm.bindFromRequest.fold(
@@ -39,7 +40,6 @@ def createQuestion() = userAuthAction.async { implicit request =>
   }
 
   import scala.util.{Failure, Success}
-  import play.api.mvc.Action
   def getQuestions = Action { implicit request =>
     val questionsT = readService.getAllQuestions
     questionsT match {
@@ -50,19 +50,19 @@ def createQuestion() = userAuthAction.async { implicit request =>
 
   import play.api.data.Form
   import play.api.data.Forms._
-val createQuestionForm = Form {
-  mapping(
-    "title" -> nonEmptyText,
-    "details" -> optional(text),
-    "tags" -> seq(uuid)
-  )(CreateQuestionData.apply)(CreateQuestionData.unapply)
-}
+  val createQuestionForm = Form {
+    mapping(
+      "title" -> nonEmptyText,
+      "details" -> optional(text),
+      "tags" -> seq(uuid)
+    )(CreateQuestionData.apply)(CreateQuestionData.unapply)
+  }
 
-val deleteQuestionForm = Form {
-  mapping(
-    "id" -> uuid
-  )(DeleteQuestionData.apply)(DeleteQuestionData.unapply)
-}
+  val deleteQuestionForm = Form {
+    mapping(
+      "id" -> uuid
+    )(DeleteQuestionData.apply)(DeleteQuestionData.unapply)
+  }
 
   import java.util.UUID
   case class CreateQuestionData(title: String,

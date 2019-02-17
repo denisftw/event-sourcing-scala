@@ -7,7 +7,7 @@ class QuestionDetailsView extends React.Component {
     axios.get("/api/questions").then(this.handleResponse);
   };
   handleResponse = (response) => {
-    const questionId = this.props.params['questionId'];
+    const questionId = this.props.match.params['questionId'];
     if (response.status == 200) {
       const maybeIndex = response.data.findIndex((q) => {
         return q.id == questionId;
