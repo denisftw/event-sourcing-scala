@@ -42,7 +42,6 @@ class TagController(components: ControllerComponents, tagEventProducer: TagEvent
     )
   }
 
-  import play.api.mvc.Action
   def getTags = Action.async { implicit request =>
     val tagsF = readService.getTags
     tagsF.map { tags => Ok(Json.toJson(tags)) }
