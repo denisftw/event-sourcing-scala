@@ -5,18 +5,22 @@ import play.api.Logger
 import play.api.mvc._
 import services.AuthService
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 
 case class UserAuthRequest[A](user: User,
   request: Request[A]) extends  WrappedRequest[A](request)
 
-class UserAuthAction(authService: AuthService)
-    extends ActionBuilder[UserAuthRequest] {
+class UserAuthAction(authService: AuthService, ec: ExecutionContext,
+                     playBodyParsers: PlayBodyParsers)
+  extends ActionBuilder[UserAuthRequest, AnyContent] {
+
+  override val executionContext = ec
+  override def parser = playBodyParsers.defaultBodyParser
 
   def invokeBlock[A](request: Request[A],
-            block: (UserAuthRequest[A]) => Future[Result]): Future[Result] = {
+            block: UserAuthRequest[A] => Future[Result]): Future[Result] = {
     val maybeUserD = authService.checkCookie(request)
     maybeUserD match {
       case Success(None) => UserAuthAction.unauthorized(request)
@@ -34,6 +38,8 @@ class UserAuthAction(authService: AuthService)
 }
 
 object UserAuthAction {
+  val log = Logger("security.UserAuthAction")
+
   val RequestUrl = "X-Auth-Request-Url"
 
   def redirectAfterLogin(request : Request[AnyContent], cookie: Cookie): Result = {
@@ -55,7 +61,7 @@ object UserAuthAction {
   }
 
   def exception(exc: Throwable): Future[Result] = {
-    Logger.error("Exception occurred while invoking authenticated action", exc)
+    log.error("Exception occurred while invoking authenticated action", exc)
     Future.successful(Results.Redirect("/500"))
   }
 }

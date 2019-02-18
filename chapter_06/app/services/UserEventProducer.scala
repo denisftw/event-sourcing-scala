@@ -4,7 +4,6 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
-import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
 import play.api.Configuration
 import util.{EventValidator, ServiceKafkaProducer}

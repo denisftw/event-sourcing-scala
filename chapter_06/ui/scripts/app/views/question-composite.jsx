@@ -1,9 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { NavLink, Switch, Route } from 'react-router-dom';
+import QuestionListView from './question-list.jsx';
+import QuestionDetailsView from './question-details.jsx';
 
 class QuestionComposite extends React.Component {
   render = () => {
-    const questionId = this.props.params['questionId'];
+    const questionId = this.props.match.params['questionId'];
     const subtitle = questionId != null ?
       <li><span>{questionId}</span></li> :
       <li><span>All</span></li>;
@@ -12,13 +14,17 @@ class QuestionComposite extends React.Component {
       <div className="question-list-composite">
         <div className="question-list-composite__header">
           <ol className="breadcrumb">
-            <li><Link to="/questions" activeClassName="active">
-              Questions</Link></li>
+            <li>
+              <NavLink to="/questions">Questions</NavLink>
+            </li>
             {subtitle}
           </ol>
         </div>
         <div className="question-list-composite__content">
-          {this.props.children}
+          <Switch>
+            <Route exact path="/questions" component={QuestionListView} />
+            <Route path="/questions/:questionId" component={QuestionDetailsView} />
+          </Switch>
         </div>
       </div>
     </div>

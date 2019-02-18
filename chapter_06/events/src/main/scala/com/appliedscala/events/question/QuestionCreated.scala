@@ -2,14 +2,14 @@ package com.appliedscala.events.question
 
 import java.util.UUID
 import com.appliedscala.events.EventData
-import org.joda.time.DateTime
+import java.time.ZonedDateTime
 import play.api.libs.json.{JsValue, Json, Reads}
 
 /**
   * Created by denis on 12/5/16.
   */
 case class QuestionCreated(title: String, details: Option[String], tags: Seq[UUID],
-    questionId: UUID, createdBy: UUID, created: DateTime) extends EventData {
+    questionId: UUID, createdBy: UUID, created: ZonedDateTime) extends EventData {
   override def action: String = QuestionCreated.actionName
   override def json: JsValue = Json.writes[QuestionCreated].writes(this)
 }

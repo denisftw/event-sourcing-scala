@@ -25,18 +25,18 @@ class AnswerEventConsumer(neo4JReadDao: Neo4JReadDao,
     maybeLogRecord.foreach(adjustReadState)
   }
 
-private def adjustReadState(logRecord: LogRecord): Unit = {
-  neo4JReadDao.handleEventWithUpdate(logRecord) { maybeUpdateId =>
-    maybeUpdateId.foreach { updateId =>
-      val threadT = readService.getQuestionThread(updateId)
-      threadT.foreach { maybeThread =>
-        maybeThread.foreach { thread =>
-          val update = ServerSentMessage.create("questionThread", thread)
-          val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
-          esActor ! EventStreamActor.DataUpdated(update.json)
+  private def adjustReadState(logRecord: LogRecord): Unit = {
+    neo4JReadDao.handleEventWithUpdate(logRecord) { maybeUpdateId =>
+      maybeUpdateId.foreach { updateId =>
+        val threadT = readService.getQuestionThread(updateId)
+        threadT.foreach { maybeThread =>
+          maybeThread.foreach { thread =>
+            val update = ServerSentMessage.create("questionThread", thread)
+            val esActor = actorSystem.actorSelection(EventStreamActor.pathPattern)
+            esActor ! EventStreamActor.DataUpdated(update.json)
+          }
         }
       }
     }
   }
-}
 }
