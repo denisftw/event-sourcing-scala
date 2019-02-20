@@ -4,14 +4,11 @@ import axios from 'axios';
 import TagManager from './views/tag-manager.jsx';
 import { createStore } from 'redux';
 import { Provider } from 'react-redux';
-import { Router, Route, IndexRoute,
-  IndexRedirect, browserHistory } from 'react-router';
-import HomeComposite from './views/home-composite.jsx';
+import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
+import NavigationBar from './views/navigation-bar.jsx';
 import AskQuestionView from './views/ask-question-view.jsx';
 import NotificationService from './util/notification-service.js';
 import QuestionComposite from './views/question-composite.jsx';
-import QuestionListView from './views/question-list.jsx';
-import QuestionDetailsView from './views/question-details.jsx';
 
 class AppComponent {
   init = () => {
@@ -95,17 +92,19 @@ class AppComponent {
     const reactDiv = document.getElementById('reactDiv');
     if (!!reactDiv) {
       ReactDOM.render(<Provider store={this.store}>
-        <Router history={browserHistory} >
-          <Route path='/' component={HomeComposite} >
-            <IndexRedirect to="/ask" />
-            <Route path='/tags' component={TagManager} />
-            <Route path='/ask' component={AskQuestionView}  />
-            <Route path='/questions' component={QuestionComposite}>
-              <IndexRoute component={QuestionListView} />
-              <Route path='/questions/:questionId' component={QuestionDetailsView} />
-            </Route>
-          </Route>
-        </Router>
+        <BrowserRouter>
+          <div className="view-home-composite__main-panel">
+            <NavigationBar />
+            <div className="view-home-composite__content-panel">
+              <Switch>
+                <Route path="/tags" component={TagManager} />
+                <Route path="/ask" component={AskQuestionView}  />
+                <Route path="/questions" component={QuestionComposite} />
+                <Redirect path="/" to="/ask" />
+              </Switch>
+            </div>
+          </div>
+        </BrowserRouter>
       </Provider>, reactDiv);
     }
   }

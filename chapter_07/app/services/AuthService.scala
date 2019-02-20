@@ -1,18 +1,15 @@
 package services
 
 import java.security.MessageDigest
-import java.util.UUID
+import java.util.{UUID, Base64}
 import java.util.concurrent.TimeUnit
 
 import dao.{SessionDao, UserDao}
 import model.{User, UserSession}
-import org.apache.commons.codec.binary.Base64
 import play.api.mvc.{Cookie, RequestHeader}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 
 class AuthService(sessionDao: SessionDao, userDao: UserDao,
     userEventProducer: UserEventProducer) {
@@ -27,15 +24,11 @@ class AuthService(sessionDao: SessionDao, userDao: UserDao,
     }
   }
 
-  def register(userCode: String, fullName: String, password: String): Future[Try[Cookie]] = {
+  def register(userCode: String, fullName: String, password: String): Try[Cookie] = {
     val userT = userDao.insertUser(userCode, fullName, password)
-    userT match {
-      case Success(user) =>
-        userEventProducer.activateUser(user.userId).map {
-          case Some(errorMessage) => Failure(new Exception(errorMessage))
-          case None => createCookie(user)
-        }
-      case Failure(th) => Future.successful(Failure(th))
+    userT.flatMap { user =>
+      userEventProducer.activateUser(user.userId)
+      createCookie(user)
     }
   }
 
@@ -65,7 +58,7 @@ class AuthService(sessionDao: SessionDao, userDao: UserDao,
     val randomPart = UUID.randomUUID().toString.toUpperCase
     val userPart = user.userId.toString.toUpperCase
     val key = s"$randomPart|$userPart"
-    val token = Base64.encodeBase64String(mda.digest(key.getBytes))
+    val token = Base64.getEncoder.encodeToString(mda.digest(key.getBytes))
     val duration = Duration.create(10, TimeUnit.HOURS)
 
     val userSession = UserSession.create(user, token, duration.toSeconds)

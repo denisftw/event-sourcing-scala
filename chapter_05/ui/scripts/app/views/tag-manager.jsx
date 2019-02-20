@@ -11,10 +11,9 @@ class TagManager extends React.Component {
   };
   addTag = () => {
     const text = this.state.text;
-    /*const isValid = this.props.tags.findIndex((el) => {
+    const isValid = this.props.tags.findIndex((el) => {
       return el.text === text;
-    }) === -1;*/
-    const isValid = true;
+    }) === -1;
     if (isValid) {
       axios.post("/api/createTag", { "text" : text }).then(() => {
         this.setState({

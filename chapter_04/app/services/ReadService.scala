@@ -3,7 +3,7 @@ package services
 import dao.Neo4JReadDao
 import model.{Question, Tag}
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 class ReadService(neo4JReadDao: Neo4JReadDao, userService: UserService) {
 

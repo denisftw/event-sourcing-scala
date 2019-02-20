@@ -10,14 +10,13 @@ import play.api.Logger
 import scala.util.{Failure, Success}
 
 class ReadService(actorSystem: ActorSystem, logDao: LogDao) {
+  val log = Logger(this.getClass)
 
-  init()
-
-  private def init(): Unit = {
+  def init(): Unit = {
     val logRecordsT = logDao.getLogRecords
     logRecordsT match {
       case Failure(th) =>
-        Logger.error("Error while initializing the read service", th)
+        log.error("Error while initializing the read service", th)
         throw th
       case Success(logRecords) =>
         val actor = actorSystem.actorOf(

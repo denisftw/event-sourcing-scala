@@ -5,15 +5,9 @@ export default {
     swal({
       title: message.title,
       text: message.body,
-      animation: false,
-      type: confirmationType,
-      showCancelButton: true,
-      confirmButtonColor: "#DD6B55",
-      confirmButtonText: 'OK',
-      cancelButtonText: 'Cancel',
-      closeOnConfirm: true,
-      closeOnCancel: true
-    }, function(isConfirm){
+      icon: confirmationType,
+      buttons: ["Cancel", true],
+    }).then(isConfirm => {
       if (isConfirm) {
         yesCallback();
       }

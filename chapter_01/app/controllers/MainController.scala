@@ -1,15 +1,13 @@
 package controllers
 
-import java.util.UUID
-
+import controllers.Assets.Asset
 import model._
-import play.api.libs.json.JsValue
 import play.api.mvc._
 import security.{UserAuthAction, UserAwareAction, UserAwareRequest}
 
 
-class MainController(userAuthAction: UserAuthAction,
-                     userAwareAction: UserAwareAction) extends Controller {
+class MainController(components: ControllerComponents, assets: Assets, userAuthAction: UserAuthAction,
+                     userAwareAction: UserAwareAction) extends AbstractController(components) {
 
   def index = userAwareAction { request =>
     Ok(views.html.pages.react(buildNavData(request),
@@ -23,4 +21,6 @@ class MainController(userAuthAction: UserAuthAction,
   private def buildNavData(request: UserAwareRequest[_]): NavigationData = {
     NavigationData(request.user, isLoggedIn = request.user.isDefined)
   }
+
+  def versioned(path: String, file: Asset) = assets.versioned(path, file)
 }

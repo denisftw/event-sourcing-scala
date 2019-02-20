@@ -9,7 +9,6 @@ import com.appliedscala.events.answer._
 import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
-import play.api.Logger
 import scalikejdbc._
 
 import scala.util.{Failure, Success, Try}
@@ -391,9 +390,7 @@ class ValidationActor extends Actor {
       events.foreach { event =>
         lastResult match {
           case None => lastResult = processSingleEvent(event, skipValidation)
-          case Some(error) =>
-            Logger.error(s"Error occurred while processing event: ${error}")
-            break()
+          case Some(_) => break()
         }
       }
     }

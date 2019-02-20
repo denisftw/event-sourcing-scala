@@ -1,7 +1,6 @@
 package controllers
 
-import java.util.UUID
-
+import controllers.Assets.Asset
 import model._
 import play.api.libs.json.JsValue
 import play.api.mvc._
@@ -9,11 +8,14 @@ import security.{UserAuthAction, UserAwareAction, UserAwareRequest}
 import akka.actor.ActorSystem
 import akka.stream.{Materializer, OverflowStrategy}
 import services.ConsumerAggregator
-class MainController(userAuthAction: UserAuthAction,
-                     userAwareAction: UserAwareAction,
+
+
+class MainController(components: ControllerComponents, assets: Assets,
                      actorSystem: ActorSystem,
                      consumerAggregator: ConsumerAggregator,
-                     mat: Materializer) extends Controller {
+                     mat: Materializer,
+                     userAuthAction: UserAuthAction, userAwareAction: UserAwareAction)
+  extends AbstractController(components) {
 
   def index = userAwareAction { request =>
     Ok(views.html.pages.react(buildNavData(request),
@@ -45,4 +47,6 @@ class MainController(userAuthAction: UserAuthAction,
     val source = Source.fromPublisher(publisher)
     Ok.chunked(source.via(EventSource.flow)).as(ContentTypes.EVENT_STREAM)
   }
+
+  def versioned(path: String, file: Asset) = assets.versioned(path, file)
 }

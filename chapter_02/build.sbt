@@ -1,14 +1,14 @@
-name := """play-event-sourcing-starter"""
+name := """practical-event-sourcing-02"""
 
 val commonSettings = Seq(
   version := "1.0-SNAPSHOT",
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.12.8",
   organization := "com.appliedscala.streaming"
 )
 
 lazy val events = (project in file("events")).settings(commonSettings).
   settings(Seq(libraryDependencies := Seq(
-    "com.typesafe.play" %% "play-json" % "2.5.9"
+    "com.typesafe.play" %% "play-json" % "2.7.1"
   )))
 
 lazy val root = (project in file(".")).settings(commonSettings).enablePlugins(PlayScala)
@@ -16,15 +16,14 @@ lazy val root = (project in file(".")).settings(commonSettings).enablePlugins(Pl
   .dependsOn(events)
 
 pipelineStages := Seq(digest)
-routesGenerator := InjectedRoutesGenerator
 
 libraryDependencies ++= Seq(
   jdbc,
   evolutions,
-  "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided",
-  "org.postgresql" % "postgresql" % "9.4.1207.jre7",
-  "org.scalikejdbc" %% "scalikejdbc"       % "2.4.2",
-  "org.scalikejdbc" %% "scalikejdbc-config"  % "2.4.2",
-  "ch.qos.logback"  %  "logback-classic"   % "1.1.7",
+  "com.softwaremill.macwire" %% "macros" % "2.3.0" % "provided",
+  "org.postgresql" % "postgresql" % "42.2.5",
+  "org.scalikejdbc" %% "scalikejdbc" % "3.3.2",
+  "org.scalikejdbc" %% "scalikejdbc-config"  % "3.3.2",
+  "ch.qos.logback"  %  "logback-classic" % "1.2.3",
   "de.svenkubiak" % "jBCrypt" % "0.4.1"
 )

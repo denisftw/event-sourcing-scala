@@ -39,7 +39,7 @@ class AskQuestionView extends React.Component {
     axios.post("/api/createQuestion", newQuestion).then((res) => {
       if (res.status == 200) {
         this.setState(this.getInitState());
-        this.props.router.push('/questions');
+        this.props.history.push('/questions');
       }
     })
   };
@@ -68,7 +68,7 @@ class AskQuestionView extends React.Component {
     return <div className="question-view-form">
       <div className="question-view-form__tag-panel">
         <Select className="question-view-form__tag-panel__select"
-                value={this.state.tags} multi={true} clearable={true}
+                value={this.state.tags} isMulti={true} isClearable={true}
                 options={tagOptions} placeholder="Please select tags for the question"
                 onChange={this.handleCombo}/>
       </div>

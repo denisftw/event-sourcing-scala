@@ -2,14 +2,10 @@ package dao
 
 
 import java.util.UUID
-
-import akka.NotUsed
-import akka.stream.scaladsl.Source
 import com.appliedscala.events.LogRecord
-import org.joda.time.DateTime
+import java.time.ZonedDateTime
 import play.api.libs.json.Json
 import scalikejdbc._
-import scalikejdbc.streams._
 
 import scala.util.Try
 
@@ -27,21 +23,11 @@ class LogDao {
     }
   }
 
-  def logRecordsStream(maybeUpTo: Option[DateTime]): Source[LogRecord, NotUsed] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    val upTo = maybeUpTo.getOrElse(DateTime.now())
-    val publisher: DatabasePublisher[LogRecord] = NamedDB('eventstore).readOnlyStream {
-      sql"select * from logs where timestamp <= $upTo order by timestamp".map(rs2LogRecord).iterator
-    }
-    val source = Source.fromPublisher(publisher)
-    source
-  }
-
   import scala.collection.mutable.ListBuffer
-  def iterateLogRecords(maybeUpTo: Option[DateTime])(chunkSize: Int)
+  def iterateLogRecords(maybeUpTo: Option[ZonedDateTime])(chunkSize: Int)
                        (handler: (Seq[LogRecord]) => Unit): Try[Unit] = Try {
     NamedDB('eventstore).readOnly { implicit session =>
-      val upTo = maybeUpTo.getOrElse(DateTime.now())
+      val upTo = maybeUpTo.getOrElse(ZonedDateTime.now())
       val buffer = ListBuffer[LogRecord]()
       sql"select * from logs where timestamp <= $upTo order by timestamp".
         foreach { wrs =>
@@ -68,7 +54,7 @@ class LogDao {
   private def rs2LogRecord(rs: WrappedResultSet): LogRecord = {
     LogRecord(UUID.fromString(rs.string("record_id")),
       rs.string("action_name"), Json.parse(rs.string("event_data")),
-      rs.jodaDateTime("timestamp"))
+      rs.dateTime("timestamp"))
   }
 }
 

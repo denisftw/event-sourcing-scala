@@ -2,23 +2,25 @@ package services
 
 import actors.{EventStreamActor, ValidationActor, WSStreamActor}
 import dao.{LogDao, Neo4JReadDao}
+import play.api.Logger
 import model.ServerSentMessage
-import org.joda.time.DateTime
+import java.time.ZonedDateTime
+
 import play.api.libs.json.JsBoolean
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.util.{Failure, Success, Try}
 
 
 /**
   * Created by denis on 12/12/16.
   */
-
 import akka.actor.ActorSystem
-
 class RewindService(actorSystem: ActorSystem,
                     validationService: ValidationService,
                     neo4JReadDao: Neo4JReadDao, logDao: LogDao) {
+
+  val log = Logger(this.getClass)
 
   private def message2Try(errorMessage: Option[String]): Try[Unit] = {
     errorMessage match {
@@ -30,7 +32,7 @@ class RewindService(actorSystem: ActorSystem,
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.duration._
 
-  private def recreateState(upTo: Option[DateTime]): Try[Unit] = Try {
+  private def recreateState(upTo: Option[ZonedDateTime]): Try[Unit] = Try {
     val timeout = 5.seconds
     val bufferSize = 200
 
@@ -73,15 +75,13 @@ class RewindService(actorSystem: ActorSystem,
     }
   }
 
-  import play.api.Logger
-
-  def refreshState(upTo: Option[DateTime]): Try[Unit] = {
+  def refreshState(upTo: Option[ZonedDateTime]): Try[Unit] = {
     val resultT = recreateState(upTo)
     resultT match {
       case Failure(th) =>
-        Logger.error("Error occurred while rewinding the state", th);
+        log.error("Error occurred while rewinding the state", th);
       case Success(_) =>
-        Logger.info("The state was successfully rebuild")
+        log.info("The state was successfully rebuild")
         val update = ServerSentMessage.create("stateRebuilt",
           JsBoolean.apply(true))
         val esActor = actorSystem.actorSelection(WSStreamActor.pathPattern)

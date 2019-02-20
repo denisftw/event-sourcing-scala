@@ -4,7 +4,7 @@ import java.util.UUID
 
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.mvc.Controller
+import play.api.mvc.{AbstractController, ControllerComponents}
 import security.UserAuthAction
 import services.AnswerEventProducer
 
@@ -14,8 +14,8 @@ import scala.concurrent.Future
 /**
   * Created by denis on 12/23/16.
   */
-class AnswerController(userAuthAction: UserAuthAction,
-    answerEventProducer: AnswerEventProducer) extends Controller {
+class AnswerController(components: ControllerComponents, userAuthAction: UserAuthAction,
+    answerEventProducer: AnswerEventProducer) extends AbstractController(components) {
 
   def createAnswer() = userAuthAction.async { implicit request =>
     createAnswerForm.bindFromRequest.fold(

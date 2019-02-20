@@ -2,14 +2,14 @@ package controllers
 
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.mvc.{Action, Controller, DiscardingCookie}
+import play.api.mvc._
 import security.UserAuthAction
 import services.AuthService
 
 import scala.util.{Failure, Success}
 
-class AuthController(authService: AuthService,
-                     userAuthAction: UserAuthAction) extends Controller {
+class AuthController(components: ControllerComponents, assets: Assets, authService: AuthService,
+                     userAuthAction: UserAuthAction) extends AbstractController(components) {
 
   def logout = userAuthAction { request =>
     authService.destroySession(request.request)

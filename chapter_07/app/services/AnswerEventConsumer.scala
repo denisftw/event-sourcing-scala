@@ -1,6 +1,6 @@
 package services
 
-import actors.{EventStreamActor, WSStreamActor}
+import actors.WSStreamActor
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import com.appliedscala.events.LogRecord

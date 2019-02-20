@@ -3,7 +3,7 @@ package com.appliedscala.events.tag
 import java.util.UUID
 
 import com.appliedscala.events.EventData
-import play.api.libs.json.{JsValue, Json, Reads}
+import play.api.libs.json.{Json, Reads}
 
 /**
   * Created by denis on 11/27/16.

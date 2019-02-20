@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.{EventData, LogRecord}
-import org.joda.time.DateTime
+import java.time.ZonedDateTime
 import play.api.Configuration
 import util.ServiceKafkaProducer
 
@@ -33,6 +33,6 @@ class TagEventProducer(actorSystem: ActorSystem,
 
   private def createLogRecord(eventData: EventData): LogRecord = {
     LogRecord(UUID.randomUUID(), eventData.action,
-      eventData.json, DateTime.now())
+      eventData.json, ZonedDateTime.now())
   }
 }

@@ -1,8 +1,4 @@
-import $ from 'jquery';
 import AppComponent from './app-component.jsx';
 
-
-$(() => {
-  const appComponent = new AppComponent();
-  appComponent.init();
-});
+const appComponent = new AppComponent();
+appComponent.init();

@@ -2,16 +2,14 @@ package controllers
 
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.mvc.{Action, Controller, DiscardingCookie}
+import play.api.mvc._
 import security.UserAuthAction
 import services.AuthService
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class AuthController(authService: AuthService,
-                     userAuthAction: UserAuthAction) extends Controller {
+class AuthController(components: ControllerComponents, authService: AuthService,
+                     userAuthAction: UserAuthAction) extends AbstractController(components) {
 
   def logout = userAuthAction { request =>
     authService.destroySession(request.request)
@@ -40,17 +38,17 @@ class AuthController(authService: AuthService,
     )
   }
 
-  def registerUser() = Action.async(parse.anyContent) { implicit request =>
+  def registerUser() = Action(parse.anyContent) { implicit request =>
     userRegistrationDataForm.bindFromRequest.fold(
-      formWithErrors => Future.successful(Ok(views.html.security.signUp(Some("Wrong data")))),
+      formWithErrors => Ok(views.html.security.signUp(Some("Wrong data"))),
       userData => {
         val passwordsMatch = userData.password1 == userData.password2
-        if (!passwordsMatch) Future.successful(Ok(views.html.security.signUp(
-          Some("Passwords don't match"))))
+        if (!passwordsMatch) Ok(views.html.security.signUp(
+          Some("Passwords don't match")))
         else {
-          val cookieFT = authService.register(userData.username,
+          val cookieT = authService.register(userData.username,
             userData.fullName, userData.password1)
-          cookieFT.map {
+          cookieT match {
             case Success(cookie) => Redirect("/").withCookies(cookie)
             case Failure(th) =>
               Ok(views.html.security.signUp(Some(th.getMessage)))
