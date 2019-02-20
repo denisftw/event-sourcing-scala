@@ -83,9 +83,7 @@ class QuestionDetailsView extends React.Component {
       </div>
       <div className="question-thread-view-form__answers">
         {answers.map((answer) => {
-          console.log('updated = ', answer.updated);
-          const normalizedDate = answer.updated.replace(/\[.+\]$/, '');
-          const updatedDate = moment.parseZone(normalizedDate).format('DD/MM/YYYY');
+          const updatedDate = moment(answer.updated).format('DD/MM/YYYY');
           const upvotes = answer.upvotes;
           const upvoteButtonDisabled = !maybeUserId ||
             answer.authorId == maybeUserId;
