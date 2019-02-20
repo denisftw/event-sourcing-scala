@@ -1,21 +1,25 @@
 package controllers
 
 import model.{NavigationData, WebPageData}
-import org.joda.time.DateTime
+import java.time.ZonedDateTime
+
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.mvc.Controller
+import play.api.mvc.{AbstractController, ControllerComponents}
 import security.UserAuthAction
 import services.RewindService
+import util.BaseTypes
 
 import scala.util.{Failure, Success}
 
 /**
   * Created by denis on 12/29/16.
   */
-class AdminController(userAuthAction: UserAuthAction,
-    rewindService: RewindService) extends Controller {
+class AdminController(components: ControllerComponents, userAuthAction: UserAuthAction,
+    rewindService: RewindService) extends AbstractController(components) {
+
+  val log = Logger(this.getClass)
 
   def admin = userAuthAction { request =>
     if (request.user.isAdmin) {
@@ -29,11 +33,10 @@ class AdminController(userAuthAction: UserAuthAction,
       rewindRequestForm.bindFromRequest.fold(
         errors => BadRequest,
         data => {
-          val dateTime = new DateTime(data.destination)
-          val resultT = rewindService.refreshState(Some(dateTime))
+          val resultT = rewindService.refreshState(Some(data.destination))
           resultT match {
             case Failure(th) =>
-              Logger.error("Error occurred while rewinding the events", th)
+              log.error("Error occurred while rewinding the events", th)
               InternalServerError(views.html.errorPage())
             case Success(result) => Ok
           }
@@ -44,9 +47,9 @@ class AdminController(userAuthAction: UserAuthAction,
 
   val rewindRequestForm = Form {
     mapping(
-      "destination" -> longNumber
+      "destination" -> BaseTypes.zonedDateTimeMapping
     )(RewindRequestData.apply)(RewindRequestData.unapply)
   }
 
-  case class RewindRequestData(destination: Long)
+  case class RewindRequestData(destination: ZonedDateTime)
 }
