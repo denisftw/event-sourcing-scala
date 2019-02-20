@@ -13,7 +13,7 @@ class TimeTravelDashboard extends React.Component {
   };
   rewind = () => {
     const destination = this.state.destination;
-    const destFmt = moment(destination).valueOf();
+    const destFmt = moment(destination).format();
     console.log('Formatted date', destFmt);
     axios.post("/api/rewind", { "destination" : destFmt }).then(() => {
       NotificationService.showMessage({

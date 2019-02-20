@@ -4,14 +4,12 @@ import axios from 'axios';
 import TagManager from './views/tag-manager.jsx';
 import { createStore } from 'redux';
 import { Provider } from 'react-redux';
-import { Router, Route, IndexRoute,
-  IndexRedirect, browserHistory } from 'react-router';
-import HomeComposite from './views/home-composite.jsx';
+import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
+import NavigationBar from './views/navigation-bar.jsx';
 import AskQuestionView from './views/ask-question-view.jsx';
 import NotificationService from './util/notification-service.js';
 import QuestionComposite from './views/question-composite.jsx';
-import QuestionListView from './views/question-list.jsx';
-import QuestionDetailsView from './views/question-details.jsx';
+import RefreshPanel from './views/refresh-panel.jsx';
 
 class AppComponent {
   init = () => {
@@ -38,7 +36,6 @@ class AppComponent {
     }
   };
   updateReceived = (data) => {
-    console.log('Data received: ', data);
     if (data['updateType'] == 'tags') {
       this.store.dispatch({
         type: 'tags_updated',
@@ -52,7 +49,6 @@ class AppComponent {
       });
     }
     else if (data['updateType'] == 'questionThread') {
-      console.log('question_thread_updated', data);
       this.store.dispatch({
         type: 'question_thread_updated',
         data: data['updateData']
@@ -114,7 +110,6 @@ class AppComponent {
 
       this.updateQuestionThreadId(action);
 
-      console.log('updatedState', updatedState);
       return updatedState;
     };
     this.store = createStore(reducer);
@@ -131,17 +126,22 @@ class AppComponent {
   };
   renderComponent = (reactDiv) => {
     ReactDOM.render(<Provider store={this.store}>
-      <Router history={browserHistory} >
-        <Route path='/' component={HomeComposite} >
-          <IndexRedirect to="/ask" />
-          <Route path='/tags' component={TagManager} />
-          <Route path='/ask' component={AskQuestionView}  />
-          <Route path='/questions' component={QuestionComposite}>
-            <IndexRoute component={QuestionListView} />
-            <Route path='/questions/:questionId' component={QuestionDetailsView} />
-          </Route>
-        </Route>
-      </Router>
+      <BrowserRouter>
+        <div>
+          <RefreshPanel />
+          <div className="view-home-composite__main-panel">
+            <NavigationBar />
+            <div className="view-home-composite__content-panel">
+              <Switch>
+                <Route path="/tags" component={TagManager} />
+                <Route path="/ask" component={AskQuestionView}  />
+                <Route path="/questions" component={QuestionComposite} />
+                <Redirect path="/" to="/ask" />
+              </Switch>
+            </div>
+          </div>
+        </div>
+      </BrowserRouter>
     </Provider>, reactDiv);
   }
 }

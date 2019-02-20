@@ -2,9 +2,8 @@ package services
 
 import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
+
 import actors.ValidationActor
-
-
 
 
 

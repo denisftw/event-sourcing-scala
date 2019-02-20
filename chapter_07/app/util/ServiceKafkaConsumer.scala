@@ -16,9 +16,7 @@ class ServiceKafkaConsumer(topicNames: Set[String], groupName: String,
     implicit val mat: Materializer, actorSystem: ActorSystem,
     configuration: Configuration, handleEvent: String => Unit) {
 
-  val config = configuration.getConfig("kafka").
-    getOrElse(throw new Exception("No config element for Kafka!")).
-    underlying
+  val config = configuration.get[Configuration]("kafka")
 
   import akka.kafka.{ConsumerSettings, Subscriptions}
   import org.apache.kafka.common.serialization.StringDeserializer
@@ -26,10 +24,10 @@ class ServiceKafkaConsumer(topicNames: Set[String], groupName: String,
 
   val consumerSettings = ConsumerSettings(actorSystem,
     new StringDeserializer, new StringDeserializer)
-    .withBootstrapServers(config.getString("bootstrap.servers"))
+    .withBootstrapServers(config.get[String]("bootstrap.servers"))
     .withGroupId(groupName)
     .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
-      config.getString("auto.offset.reset"))
+      config.get[String]("auto.offset.reset"))
 
   import akka.kafka.scaladsl.Consumer
   Consumer.committableSource(consumerSettings,
@@ -40,7 +38,4 @@ class ServiceKafkaConsumer(topicNames: Set[String], groupName: String,
   }.mapAsync(1) { msg =>
     msg.committableOffset.commitScaladsl()
   }.runWith(Sink.ignore)
-
-  val blah = Consumer.committableSource(consumerSettings,
-    Subscriptions.topics(topicNames))
 }

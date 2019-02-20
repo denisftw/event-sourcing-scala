@@ -2,7 +2,7 @@ package com.appliedscala.events.tag
 
 import java.util.UUID
 
-import com.appliedscala.events.{EventData, LogRecord}
+import com.appliedscala.events.EventData
 import play.api.libs.json.{JsValue, Json, Reads}
 
 /**
