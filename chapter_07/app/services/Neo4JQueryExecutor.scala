@@ -1,8 +1,10 @@
 package services
 
-import java.util.UUID
+import org.neo4j.driver.summary.SummaryCounters
+import org.neo4j.driver.{AuthTokens, GraphDatabase, Session}
 
-import scala.collection.mutable.ListBuffer
+import java.util.UUID
+import org.neo4j.driver.Record
 import scala.util.Try
 import play.api.{Logger => PlayLogger}
 
@@ -18,7 +20,6 @@ object Neo4JQuery {
 }
 
 import play.api.Configuration
-import org.neo4j.driver.v1._
 class Neo4JQueryExecutor(configuration: Configuration) {
 
   val log = PlayLogger(this.getClass)
@@ -45,7 +46,7 @@ class Neo4JQueryExecutor(configuration: Configuration) {
       updates.foreach { update =>
         transaction.run(update.query, update.paramsAsJava)
       }
-      transaction.success()
+      transaction.commit()
       transaction.close()
     }
     result.recover { case th =>
@@ -55,7 +56,6 @@ class Neo4JQueryExecutor(configuration: Configuration) {
     result
   }
 
-  import org.neo4j.driver.v1.summary.SummaryCounters
   def executeUpdate(update: Neo4JQuery): Try[SummaryCounters] = {
     doWithSession { session =>
       val result = session.run(update.query, update.paramsAsJava)

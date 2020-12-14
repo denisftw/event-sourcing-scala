@@ -50,7 +50,7 @@ class AuthService(sessionDao: SessionDao, userDao: UserDao,
     val maybeCookie = header.cookies.get(cookieHeader)
     maybeCookie match {
       case Some(cookie) => sessionDao.deleteSession(cookie.value)
-      case None => Success(Unit)
+      case None => Success(())
     }
   }
 

@@ -9,7 +9,7 @@ import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
 import model.{Answer, Question, QuestionThread, Tag}
 import java.time.ZonedDateTime
-import org.neo4j.driver.v1.Record
+import org.neo4j.driver.Record
 import services.{Neo4JQuery, Neo4JQueryExecutor, Neo4JUpdate}
 import util.BaseTypes
 
