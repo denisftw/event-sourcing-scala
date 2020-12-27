@@ -17,7 +17,7 @@ class EventValidator(validationService: ValidationService,
     actorSystem: ActorSystem) {
 
   def validateAndSend(userId: UUID, event: LogRecord,
-      kafkaProducer: ServiceKafkaProducer): Future[Option[String]] = {
+      messageProducer: IMessageProducer): Future[Option[String]] = {
     val maybeErrorMessageF = validationService.validate(event)
     maybeErrorMessageF.map {
       case Some(errorMessage) =>
@@ -25,7 +25,7 @@ class EventValidator(validationService: ValidationService,
           WSStreamActor.userSpecificPathPattern(userId))
         actorSelection ! WSStreamActor.ErrorOccurred(errorMessage)
       case None =>
-        kafkaProducer.send(event.encode)
+        messageProducer.send(event.encode)
     }
     maybeErrorMessageF
   }

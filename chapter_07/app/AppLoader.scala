@@ -11,7 +11,7 @@ import play.api.mvc.DefaultControllerComponents
 import scalikejdbc.config.DBs
 import security.{UserAuthAction, UserAwareAction}
 import services._
-import util.EventValidator
+import util.{EventValidator, MessageLogRegistry, MessageQueueRegistry}
 
 import scala.concurrent.Future
 
@@ -73,11 +73,13 @@ class AppComponents(context: Context) extends BuiltInComponentsFromContext(conte
   lazy val authService = wire[AuthService]
   lazy val userAuthAction = wire[UserAuthAction]
   lazy val userAwareAction = wire[UserAwareAction]
+  lazy val messageProcessingRegistry: MessageLogRegistry = wire[MessageLogRegistry]
 
   override lazy val dynamicEvolutions = new DynamicEvolutions
 
   applicationLifecycle.addStopHook { () =>
     DBs.closeAll()
+    messageProcessingRegistry.shutdown()
     Future.successful(())
   }
 

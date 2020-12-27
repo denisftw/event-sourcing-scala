@@ -1,3 +1,4 @@
+/*
 package util
 
 import akka.actor.ActorSystem
@@ -14,16 +15,16 @@ class ServiceKafkaProducer(topicName: String,
     get[String]("kafka.bootstrap.servers")
 
   import akka.kafka.ProducerSettings
-  import org.apache.kafka.common.serialization.StringSerializer
+  import org.apache.kafka.common.serialization.ByteArraySerializer
 
   val producerSettings = ProducerSettings(actorSystem,
-    new StringSerializer, new StringSerializer)
+    new ByteArraySerializer, new ByteArraySerializer)
     .withBootstrapServers(bootstrapServers)
 
   val producer = producerSettings.createKafkaProducer()
 
   import org.apache.kafka.clients.producer.ProducerRecord
-  def send(logRecordStr: String): Unit = {
-    producer.send(new ProducerRecord(topicName, logRecordStr))
+  def send(logRecord: Array[Byte]): Unit = {
+    producer.send(new ProducerRecord(topicName, logRecord))
   }
-}
+}*/

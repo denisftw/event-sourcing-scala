@@ -40,5 +40,6 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [new TerserPlugin()],
-  }
+  },
+  devtool: process.env.NODE_ENV === 'development' ? 'source-map' : false
 };

@@ -1,27 +1,22 @@
 package services
 
-import actors.{EventStreamActor, WSStreamActor}
+import actors.WSStreamActor
 import akka.actor.ActorSystem
-import akka.stream.Materializer
 import com.appliedscala.events.LogRecord
 import dao.Neo4JReadDao
-import model.{ServerSentMessage, Tag}
-import play.api.Configuration
-import util.ServiceKafkaConsumer
+import model.ServerSentMessage
+import util.{IMessageConsumer, IMessageProcessingRegistry}
 
-import scala.concurrent.Future
 
 /**
   * Created by denis on 12/3/16.
   */
 class TagEventConsumer(neo4JReadDao: Neo4JReadDao, actorSystem: ActorSystem,
-    configuration: Configuration, materializer: Materializer) {
+    registry: IMessageProcessingRegistry) extends IMessageConsumer {
 
-  val topicName = "tags"
-  val serviceKafkaConsumer = new ServiceKafkaConsumer(Set(topicName),
-    "read", materializer, actorSystem, configuration, handleEvent)
+  registry.registerConsumer("read.tags", this)
 
-  private def handleEvent(event: String): Unit = {
+  override def messageReceived(event: Array[Byte]): Unit = {
     val maybeLogRecord = LogRecord.decode(event)
     maybeLogRecord.foreach(adjustReadState)
   }

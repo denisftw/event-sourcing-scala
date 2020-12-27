@@ -1,8 +1,8 @@
 package controllers
 
 import model.{NavigationData, WebPageData}
-import java.time.ZonedDateTime
 
+import java.time.ZonedDateTime
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
@@ -11,7 +11,7 @@ import security.UserAuthAction
 import services.RewindService
 import util.BaseTypes
 
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 /**
   * Created by denis on 12/29/16.
@@ -19,6 +19,7 @@ import scala.util.{Failure, Success}
 class AdminController(components: ControllerComponents, userAuthAction: UserAuthAction,
     rewindService: RewindService) extends AbstractController(components) {
 
+  import util.ThreadPools.CPU
   val log = Logger(this.getClass)
 
   def admin = userAuthAction { request =>
@@ -28,21 +29,21 @@ class AdminController(components: ControllerComponents, userAuthAction: UserAuth
     } else Forbidden
   }
 
-  def rewind() = userAuthAction { implicit request =>
+  def rewind() = userAuthAction.async { implicit request =>
     if (request.user.isAdmin) {
       rewindRequestForm.bindFromRequest.fold(
-        errors => BadRequest,
+        _ => Future.successful(BadRequest),
         data => {
-          val resultT = rewindService.refreshState(Some(data.destination))
-          resultT match {
-            case Failure(th) =>
-              log.error("Error occurred while rewinding the events", th)
-              InternalServerError(views.html.errorPage())
-            case Success(result) => Ok
+          rewindService.refreshState(data.destination).map { _ =>
+            Ok
+          }.recover { case th =>
+            // TODO: [LOGBACK-1027]
+            log.error("Error occurred while rewinding the events", th)
+            InternalServerError(views.html.errorPage())
           }
         }
       )
-    } else Forbidden
+    } else Future.successful(Forbidden)
   }
 
   val rewindRequestForm = Form {

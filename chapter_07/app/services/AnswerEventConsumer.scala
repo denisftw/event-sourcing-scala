@@ -2,25 +2,20 @@ package services
 
 import actors.WSStreamActor
 import akka.actor.ActorSystem
-import akka.stream.Materializer
 import com.appliedscala.events.LogRecord
 import dao.Neo4JReadDao
 import model.ServerSentMessage
-import play.api.Configuration
-import util.ServiceKafkaConsumer
+import util.{IMessageConsumer, IMessageProcessingRegistry}
 
 /**
   * Created by denis on 12/23/16.
   */
 class AnswerEventConsumer(neo4JReadDao: Neo4JReadDao,
-    actorSystem: ActorSystem, configuration: Configuration,
-    materializer: Materializer, readService: ReadService) {
+                          actorSystem: ActorSystem, registry: IMessageProcessingRegistry,
+                          readService: ReadService) extends IMessageConsumer {
+  registry.registerConsumer("read.answers", this)
 
-  val topicName = "answers"
-  val serviceKafkaConsumer = new ServiceKafkaConsumer(Set(topicName),
-    "read", materializer, actorSystem, configuration, handleEvent)
-
-  private def handleEvent(event: String): Unit = {
+  override def messageReceived(event: Array[Byte]): Unit = {
     val maybeLogRecord = LogRecord.decode(event)
     maybeLogRecord.foreach(adjustReadState)
   }

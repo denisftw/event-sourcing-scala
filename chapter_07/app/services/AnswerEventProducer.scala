@@ -1,24 +1,20 @@
 package services
 
 import java.util.UUID
-
-import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
 import com.appliedscala.events.answer._
+
 import java.time.ZonedDateTime
-import play.api.Configuration
-import util.{EventValidator, ServiceKafkaProducer}
+import util.{EventValidator, IMessageProcessingRegistry}
 
 import scala.concurrent.Future
 
 /**
   * Created by denis on 12/23/16.
   */
-class AnswerEventProducer(actorSystem: ActorSystem, configuration: Configuration,
-    eventValidator: EventValidator) {
+class AnswerEventProducer(registry: IMessageProcessingRegistry, eventValidator: EventValidator) {
 
-  val kafkaProducer = new ServiceKafkaProducer("answers",
-    actorSystem, configuration)
+  private val producer = registry.createProducer("answers")
 
   def createAnswer(questionId: UUID, answerText: String,
                    createdBy: UUID): Future[Option[String]] = {
@@ -27,14 +23,14 @@ class AnswerEventProducer(actorSystem: ActorSystem, configuration: Configuration
     val event = AnswerCreated(answerId, answerText,
       questionId, createdBy, created)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(createdBy, record, kafkaProducer)
+    eventValidator.validateAndSend(createdBy, record, producer)
   }
 
   def deleteAnswer(questionId: UUID, answerId: UUID,
          deletedBy: UUID): Future[Option[String]] = {
     val event = AnswerDeleted(answerId, questionId, deletedBy)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(deletedBy, record, kafkaProducer)
+    eventValidator.validateAndSend(deletedBy, record, producer)
   }
 
   def updateAnswer(questionId: UUID, answerId: UUID,
@@ -43,20 +39,20 @@ class AnswerEventProducer(actorSystem: ActorSystem, configuration: Configuration
     val event = AnswerUpdated(answerId, answerText,
       questionId, updatedBy, updated)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(updatedBy, record, kafkaProducer)
+    eventValidator.validateAndSend(updatedBy, record, producer)
   }
 
   def upvoteAnswer(questionId: UUID, answerId: UUID,
          userId: UUID): Future[Option[String]] = {
     val event = AnswerUpvoted(answerId, questionId, userId)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(userId, record, kafkaProducer)
+    eventValidator.validateAndSend(userId, record, producer)
   }
 
   def downvoteAnswer(questionId: UUID, answerId: UUID,
          userId: UUID): Future[Option[String]] = {
     val event = AnswerDownvoted(answerId, questionId, userId)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(userId, record, kafkaProducer)
+    eventValidator.validateAndSend(userId, record, producer)
   }
 }

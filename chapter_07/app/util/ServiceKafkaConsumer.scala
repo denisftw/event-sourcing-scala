@@ -1,3 +1,4 @@
+/*
 package util
 
 import akka.actor.ActorSystem
@@ -9,21 +10,18 @@ import play.api.Configuration
 
 import scala.concurrent.Future
 
-/**
-  * Created by denis on 12/3/16.
-  */
 class ServiceKafkaConsumer(topicNames: Set[String], groupName: String,
     implicit val mat: Materializer, actorSystem: ActorSystem,
-    configuration: Configuration, handleEvent: String => Unit) {
+    configuration: Configuration, handleEvent: Array[Byte] => Unit) {
 
   val config = configuration.get[Configuration]("kafka")
 
   import akka.kafka.{ConsumerSettings, Subscriptions}
-  import org.apache.kafka.common.serialization.StringDeserializer
+  import org.apache.kafka.common.serialization.ByteArrayDeserializer
   import org.apache.kafka.clients.consumer.ConsumerConfig
 
   val consumerSettings = ConsumerSettings(actorSystem,
-    new StringDeserializer, new StringDeserializer)
+    new ByteArrayDeserializer, new ByteArrayDeserializer)
     .withBootstrapServers(config.get[String]("bootstrap.servers"))
     .withGroupId(groupName)
     .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
@@ -39,3 +37,4 @@ class ServiceKafkaConsumer(topicNames: Set[String], groupName: String,
     msg.committableOffset.commitScaladsl()
   }.runWith(Sink.ignore)
 }
+*/

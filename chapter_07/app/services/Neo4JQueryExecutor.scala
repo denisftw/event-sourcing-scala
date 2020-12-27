@@ -50,6 +50,7 @@ class Neo4JQueryExecutor(configuration: Configuration) {
       transaction.close()
     }
     result.recover { case th =>
+      // TODO: [LOGBACK-1027]
       log.error("Error occurred while executing the Neo4J batch", th)
     }
     session.close()

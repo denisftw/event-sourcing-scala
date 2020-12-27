@@ -3,7 +3,7 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} %coloredLevel [%logger] %msg%n%xException</pattern>
+      <pattern>%d{HH:mm:ss.SSS} %coloredLevel [%logger{0}] %msg%n%xException</pattern>
     </encoder>
   </appender>
 
@@ -12,4 +12,9 @@
   <root level="info">
     <appender-ref ref="STDOUT" />
   </root>
+
+  <logger name="org.apache.kafka" level="WARN" />
+  <logger name="akka.kafka" level="WARN" />
+  <logger name="akka.stream" level="WARN" />
+  <logger name="scalikejdbc.streams" level="WARN" />
 </configuration>

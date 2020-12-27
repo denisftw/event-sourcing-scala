@@ -23,9 +23,11 @@ libraryDependencies ++= Seq(
   "com.softwaremill.macwire" %% "macros" % "2.3.3" % "provided",
   "org.postgresql" % "postgresql" % "42.2.18",
   "org.scalikejdbc" %% "scalikejdbc" % "3.5.0",
+  "org.scalikejdbc" %% "scalikejdbc-streams" % "3.5.0",
   "org.scalikejdbc" %% "scalikejdbc-config"  % "3.5.0",
   "ch.qos.logback"  %  "logback-classic" % "1.2.3",
   "de.svenkubiak" % "jBCrypt" % "0.4.1",
   "org.neo4j.driver" % "neo4j-java-driver" % "4.2.0",
+  "com.rabbitmq" % "amqp-client" % "5.9.0",
   "com.typesafe.akka" %% "akka-stream-kafka" % "2.0.5"
 )

@@ -34,7 +34,7 @@ class ValidationActor extends Actor {
   private def validateTagCreated(tagText: String, userId: UUID): Option[String] = {
     validateUser(userId) {
       val maybeExistingT = Try {
-        NamedDB('validation).readOnly { implicit session =>
+        NamedDB(Symbol("validation")).readOnly { implicit session =>
           sql"select tag_id from tags where tag_text = $tagText".
             map(_.string("tag_id")).headOption().apply()
         }
@@ -49,7 +49,7 @@ class ValidationActor extends Actor {
 
   private def updateTagCreated(tagId: UUID, tagText: String): Option[String] = {
     invokeUpdate{
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"insert into tags(tag_id, tag_text) values($tagId, $tagText)".
           update().apply()
       }
@@ -58,11 +58,11 @@ class ValidationActor extends Actor {
 
   private def validateTagDeleted(tagId: UUID, userId: UUID): Option[String] = {
     validateUser(userId) {
-      val maybeExistingTag = NamedDB('validation).readOnly { implicit session =>
+      val maybeExistingTag = NamedDB(Symbol("validation")).readOnly { implicit session =>
         sql"select tag_id from tags tn where tag_id = ${tagId}".
           map(_.string("tag_id")).headOption().apply()
       }
-      val maybeDependentQuestions = NamedDB('validation).readOnly { implicit session =>
+      val maybeDependentQuestions = NamedDB(Symbol("validation")).readOnly { implicit session =>
         sql"select question_id from tag_question tq where tag_id = ${tagId}".
           map(_.string("question_id")).list().apply()
       }
@@ -76,7 +76,7 @@ class ValidationActor extends Actor {
 
   private def updateTagDeleted(tagId: UUID): Option[String] = {
     invokeUpdate {
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from tags where tag_id = ${tagId}".update().apply()
       }
     }
@@ -93,7 +93,7 @@ class ValidationActor extends Actor {
 
   private def updateUserActivated(userId: UUID): Option[String] = {
     invokeUpdate{
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"insert into active_users(user_id) values($userId)".
           update().apply()
       }
@@ -111,7 +111,7 @@ class ValidationActor extends Actor {
 
   private def isActivated(userId: UUID): Try[Boolean] = {
     Try {
-      NamedDB('validation).readOnly { implicit session =>
+      NamedDB(Symbol("validation")).readOnly { implicit session =>
         sql"select user_id from active_users where user_id = $userId".
           map(_.string("user_id")).headOption().apply().isDefined
       }
@@ -129,7 +129,7 @@ class ValidationActor extends Actor {
 
   private def updateUserDeactivated(userId: UUID): Option[String] = {
     invokeUpdate{
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from active_users where user_id = $userId".
           update().apply()
       }
@@ -140,8 +140,8 @@ class ValidationActor extends Actor {
       Option[String] = {
     validateUser(userId) {
       val maybeQuestionOwnerT = Try {
-        NamedDB('validation).readOnly { implicit session =>
-          sql"SELECT user_id FROM question_user WHERE question_id = $questionId".
+        NamedDB(Symbol("validation")).readOnly { implicit session =>
+          sql"select user_id from question_user where question_id = $questionId".
             map(_.string("user_id")).headOption().apply()
         }
       }
@@ -160,7 +160,7 @@ class ValidationActor extends Actor {
 
   private def updateQuestionDeleted(id: UUID): Option[String] = {
     invokeUpdate {
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from question_user where question_id = $id".update().apply()
       }
     }
@@ -169,7 +169,7 @@ class ValidationActor extends Actor {
   private def validateQuestionCreated(questionId: UUID, userId: UUID, tags: Seq[UUID]): Option[String] = {
     validateUser(userId) {
       val existingTagsT = Try {
-        NamedDB('validation).localTx { implicit session =>
+        NamedDB(Symbol("validation")).localTx { implicit session =>
           implicit val binderFactory: ParameterBinderFactory[UUID] = ParameterBinderFactory {
             value => (stmt, idx) => stmt.setObject(idx, value)
           }
@@ -188,7 +188,7 @@ class ValidationActor extends Actor {
   private def updateAnswerCreated(answerId: UUID, userId: UUID,
       questionId: UUID): Option[String] = {
     invokeUpdate {
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"""insert into answer_user(answer_id, user_id)
              values(${answerId}, ${userId})""".update().apply()
         sql"""insert into question_answer(question_id, answer_id)
@@ -201,7 +201,7 @@ class ValidationActor extends Actor {
       questionId: UUID): Option[String] = {
     validateUser(userId) {
       val resultT = Try {
-        NamedDB('validation).readOnly { implicit session =>
+        NamedDB(Symbol("validation")).readOnly { implicit session =>
           val questionExists =
             sql"select * from question_user where question_id = ${questionId}".
               map(_.string("question_id")).headOption().apply().isDefined
@@ -232,7 +232,7 @@ class ValidationActor extends Actor {
     validateUser(userId) {
       val UserIdStr = userId.toString
       val maybeAnswerOwnerT = Try {
-        NamedDB('validation).readOnly { implicit session =>
+        NamedDB(Symbol("validation")).readOnly { implicit session =>
           sql"select user_id from answer_user where answer_id = ${answerId}".
             map(_.string("user_id")).headOption().apply()
         }
@@ -248,7 +248,7 @@ class ValidationActor extends Actor {
 
   private def updateAnswerDeleted(answerId: UUID): Option[String] = {
     invokeUpdate {
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from answer_user where answer_id = ${answerId}".update().apply()
       }
     }
@@ -257,7 +257,7 @@ class ValidationActor extends Actor {
   private def validateAnswerUpdated(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
     val UserIdStr = userId.toString
     val maybeAnswerOwnerT = Try {
-      NamedDB('validation).readOnly { implicit session =>
+      NamedDB(Symbol("validation")).readOnly { implicit session =>
         sql"select user_id from answer_user where answer_id = ${answerId}".
           map(_.string("user_id")).headOption().apply()
       }
@@ -275,7 +275,7 @@ class ValidationActor extends Actor {
   private def validateAnswerUpvoted(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
     val UserIdStr = userId.toString
     val resultT = Try {
-      NamedDB('validation).readOnly { implicit session =>
+      NamedDB(Symbol("validation")).readOnly { implicit session =>
         val questionExists =
           sql"select * from question_user where question_id = ${questionId}".
             map(_.string("question_id")).headOption().apply().isDefined
@@ -300,7 +300,7 @@ class ValidationActor extends Actor {
 
   private def updateAnswerUpvoted(answerId: UUID, userId: UUID): Option[String] = {
     invokeUpdate {
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"insert into answer_upvoter(answer_id, upvoted_by_user_id) values(${answerId}, ${userId})".update().apply()
       }
     }
@@ -308,7 +308,7 @@ class ValidationActor extends Actor {
 
   private def validateAnswerDownvoted(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
     val resultT = Try {
-      NamedDB('validation).readOnly { implicit session =>
+      NamedDB(Symbol("validation")).readOnly { implicit session =>
         val questionExists =
           sql"select * from question_user where question_id = ${questionId}".
             map(_.string("question_id")).headOption().apply().isDefined
@@ -328,7 +328,7 @@ class ValidationActor extends Actor {
 
   private def updateAnswerDownvoted(answerId: UUID, userId: UUID): Option[String] = {
     invokeUpdate {
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}".update().apply()
       }
     }
@@ -336,7 +336,7 @@ class ValidationActor extends Actor {
 
   private def updateQuestionCreated(questionId: UUID, userId: UUID, tags: Seq[UUID]): Option[String] = {
     invokeUpdate {
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"insert into question_user(question_id, user_id) values(${questionId}, ${userId})".update().apply()
         tags.foreach { tagId =>
           sql"insert into tag_question(tag_id, question_id) values(${tagId}, ${questionId})".update().apply()
@@ -356,7 +356,7 @@ class ValidationActor extends Actor {
   private def resetState(fromScratch: Boolean): Option[String] = {
     if (!fromScratch) None
     else invokeUpdate {
-      NamedDB('validation).localTx { implicit session =>
+      NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from tags where 1 > 0".update().apply()
         sql"delete from active_users where 1 > 0".update().apply()
         sql"delete from question_user where 1 > 0".update.apply()
