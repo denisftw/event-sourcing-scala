@@ -10,7 +10,7 @@ import dao._
 import play.api.mvc.DefaultControllerComponents
 import scalikejdbc.config.DBs
 import security.{UserAuthAction, UserAwareAction}
-import services._
+import services.{ClientBroadcastService, _}
 import util.{EventValidator, MessageLogRegistry, MessageQueueRegistry}
 
 import scala.concurrent.Future
@@ -74,6 +74,7 @@ class AppComponents(context: Context) extends BuiltInComponentsFromContext(conte
   lazy val userAuthAction = wire[UserAuthAction]
   lazy val userAwareAction = wire[UserAwareAction]
   lazy val messageProcessingRegistry: MessageLogRegistry = wire[MessageLogRegistry]
+  lazy val clientBroadcastService = wire[ClientBroadcastService]
 
   override lazy val dynamicEvolutions = new DynamicEvolutions
 

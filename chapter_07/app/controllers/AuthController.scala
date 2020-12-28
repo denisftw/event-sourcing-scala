@@ -6,11 +6,12 @@ import play.api.mvc._
 import security.UserAuthAction
 import services.AuthService
 
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 class AuthController(components: ControllerComponents, authService: AuthService,
                      userAuthAction: UserAuthAction) extends AbstractController(components) {
 
+  import util.ThreadPools.CPU
   def logout = userAuthAction { request =>
     authService.destroySession(request.request)
     Redirect("/").discardingCookies(DiscardingCookie(authService.cookieHeader))
@@ -24,48 +25,48 @@ class AuthController(components: ControllerComponents, authService: AuthService,
     Ok(views.html.security.signUp(None))
   }
 
-  def doLogin() = Action(parse.anyContent) { implicit request =>
-    userLoginDataForm.bindFromRequest.fold(
-      formWithErrors => Ok(views.html.security.login(Some("Wrong data"))),
+  def doLogin() = Action.async(parse.anyContent) { implicit request =>
+    userLoginDataForm.bindFromRequest().fold(
+      formWithErrors => Future.successful(Ok(views.html.security.login(Some("Wrong data")))),
       userData => {
-        val cookieT = authService.login(userData.username, userData.password)
-        cookieT match {
-          case Success(cookie) =>
-            UserAuthAction.redirectAfterLogin(request, cookie)
-          case Failure(th) => Ok(views.html.security.login(Some(th.getMessage)))
+        authService.login(userData.username, userData.password).map { cookie =>
+          UserAuthAction.redirectAfterLogin(request, cookie)
+        }.recover { case th =>
+          Ok(views.html.security.login(Some(th.getMessage)))
         }
       }
     )
   }
 
-  def registerUser() = Action(parse.anyContent) { implicit request =>
-    userRegistrationDataForm.bindFromRequest.fold(
-      formWithErrors => Ok(views.html.security.signUp(Some("Wrong data"))),
+  def registerUser() = Action.async(parse.anyContent) { implicit request =>
+    userRegistrationDataForm.bindFromRequest().fold(
+      formWithErrors => Future.successful(Ok(views.html.security.signUp(Some("Wrong data")))),
       userData => {
         val passwordsMatch = userData.password1 == userData.password2
-        if (!passwordsMatch) Ok(views.html.security.signUp(
-          Some("Passwords don't match")))
+        if (!passwordsMatch) {
+          Future.successful(Ok(views.html.security.signUp(
+            Some("Passwords don't match"))))
+        }
         else {
-          val cookieT = authService.register(userData.username,
-            userData.fullName, userData.password1)
-          cookieT match {
-            case Success(cookie) => Redirect("/").withCookies(cookie)
-            case Failure(th) =>
-              Ok(views.html.security.signUp(Some(th.getMessage)))
+          authService.register(userData.username,
+            userData.fullName, userData.password1).map { cookie =>
+            Redirect("/").withCookies(cookie)
+          }.recover { case th =>
+            Ok(views.html.security.signUp(Some(th.getMessage)))
           }
         }
       }
     )
   }
 
-  val userLoginDataForm = Form {
+  private val userLoginDataForm = Form {
     mapping(
       "username" -> email,
       "password" -> nonEmptyText
     )(UserLoginData.apply)(UserLoginData.unapply)
   }
 
-  val userRegistrationDataForm = Form {
+  private val userRegistrationDataForm = Form {
     mapping(
       "username" -> email,
       "fullName" -> nonEmptyText,

@@ -31,7 +31,7 @@ class AdminController(components: ControllerComponents, userAuthAction: UserAuth
 
   def rewind() = userAuthAction.async { implicit request =>
     if (request.user.isAdmin) {
-      rewindRequestForm.bindFromRequest.fold(
+      rewindRequestForm.bindFromRequest().fold(
         _ => Future.successful(BadRequest),
         data => {
           rewindService.refreshState(data.destination).map { _ =>

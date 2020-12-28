@@ -1,31 +1,31 @@
 package dao
 
 import java.util.UUID
-
 import model.User
 import org.mindrot.jbcrypt.BCrypt
 import scalikejdbc._
 
-import scala.util.Try
+import scala.concurrent.Future
 
 
 class UserDao {
 
-  def findById(userId: UUID): Try[Option[User]] = Try {
+  import util.ThreadPools.IO
+  def findById(userId: UUID): Future[Option[User]] = Future {
     NamedDB(Symbol("auth")).readOnly { implicit session =>
       sql"select * from users where user_id = $userId".
         map(User.fromRS).headOption().apply()
     }
   }
 
-  def getUsers: Try[Seq[User]] = Try {
+  def getUsers: Future[Seq[User]] = Future {
     NamedDB(Symbol("auth")).readOnly { implicit session =>
       sql"select * from users".map(User.fromRS).list().apply()
     }
   }
 
   def insertUser(userCode: String, fullName: String,
-    password: String): Try[User] = Try {
+    password: String): Future[User] = Future {
     val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
     val user = User(UUID.randomUUID(), userCode, fullName, passwordHash, isAdmin = false)
     NamedDB(Symbol("auth")).localTx { implicit session =>
@@ -36,7 +36,7 @@ class UserDao {
     user
   }
 
-  def checkUser(userCode: String, password: String): Try[User] = Try {
+  def checkUser(userCode: String, password: String): Future[User] = Future {
     NamedDB(Symbol("auth")).readOnly { implicit session =>
       val maybeUser = sql"select * from users where user_code = $userCode".
         map(User.fromRS).single().apply()

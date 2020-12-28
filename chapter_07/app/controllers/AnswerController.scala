@@ -18,7 +18,7 @@ class AnswerController(components: ControllerComponents, userAuthAction: UserAut
     answerEventProducer: AnswerEventProducer) extends AbstractController(components) {
 
   def createAnswer() = userAuthAction.async { implicit request =>
-    createAnswerForm.bindFromRequest.fold(
+    createAnswerForm.bindFromRequest().fold(
       formWithErrors =>
         Future.successful(BadRequest),
       data => {
@@ -32,7 +32,7 @@ class AnswerController(components: ControllerComponents, userAuthAction: UserAut
   }
 
   def deleteAnswer() = userAuthAction.async { implicit request =>
-    deleteAnswerForm.bindFromRequest.fold(
+    deleteAnswerForm.bindFromRequest().fold(
       formWithErrors =>
         Future.successful(BadRequest),
       data => {
@@ -46,7 +46,7 @@ class AnswerController(components: ControllerComponents, userAuthAction: UserAut
   }
 
   def updateAnswer() = userAuthAction.async { implicit request =>
-    updateAnswerForm.bindFromRequest.fold(
+    updateAnswerForm.bindFromRequest().fold(
       formWithErrors =>
         Future.successful(BadRequest),
       data => {
@@ -60,7 +60,7 @@ class AnswerController(components: ControllerComponents, userAuthAction: UserAut
   }
 
   def upvoteAnswer() = userAuthAction.async { implicit request =>
-    upvoteAnswerForm.bindFromRequest.fold(
+    upvoteAnswerForm.bindFromRequest().fold(
       formWithErrors =>
         Future.successful(BadRequest),
       data => {
@@ -74,7 +74,7 @@ class AnswerController(components: ControllerComponents, userAuthAction: UserAut
   }
 
   def downvoteAnswer() = userAuthAction.async { implicit request =>
-    upvoteAnswerForm.bindFromRequest.fold(
+    upvoteAnswerForm.bindFromRequest().fold(
       formWithErrors =>
         Future.successful(BadRequest),
       data => {

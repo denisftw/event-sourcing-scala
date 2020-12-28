@@ -6,8 +6,6 @@ import play.api.mvc._
 import services.AuthService
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
-
 
 case class UserAuthRequest[A](user: User,
   request: Request[A]) extends  WrappedRequest[A](request)
@@ -16,23 +14,14 @@ class UserAuthAction(authService: AuthService, ec: ExecutionContext,
                      playBodyParsers: PlayBodyParsers)
   extends ActionBuilder[UserAuthRequest, AnyContent] {
 
-  override val executionContext = ec
+  override implicit val executionContext = ec
   override def parser = playBodyParsers.defaultBodyParser
 
   def invokeBlock[A](request: Request[A],
             block: UserAuthRequest[A] => Future[Result]): Future[Result] = {
-    val maybeUserD = authService.checkCookie(request)
-    maybeUserD match {
-      case Success(None) => UserAuthAction.unauthorized(request)
-      case Success(Some(user)) => block(UserAuthRequest(user, request))
-      case Failure(th) => UserAuthAction.exception(th)
-    }
-  }
-
-  def checkUser[A](request: RequestHeader): Option[User] = {
-    authService.checkCookie(request) match {
-      case Success(Some(user)) => Some(user)
-      case _ => None
+    authService.checkCookie(request).flatMap {
+      case None => UserAuthAction.unauthorized(request)
+      case Some(user) => block(UserAuthRequest(user, request))
     }
   }
 }

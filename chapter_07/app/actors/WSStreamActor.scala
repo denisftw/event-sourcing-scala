@@ -15,6 +15,8 @@ object QuestionThreadIdChanged {
 /**
   * Created by denis on 12/30/16.
   */
+
+/*
 class WSStreamActor(out: ActorRef) extends Actor {
   import actors.WSStreamActor._
   var questionThreadId: Option[UUID] = None
@@ -54,4 +56,4 @@ object WSStreamActor {
   }
   def userSpecificPathPattern(userId: UUID) =
     s"/user/$name-${userId.toString}-*"
-}
+}*/

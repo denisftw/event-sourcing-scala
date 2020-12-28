@@ -1,19 +1,19 @@
 package services
 
 import java.util.UUID
-
 import dao.Neo4JReadDao
 import model.{Question, QuestionThread, Tag}
 
-import scala.util.Try
+import scala.concurrent.Future
 
 class ReadService(neo4JReadDao: Neo4JReadDao, userService: UserService) {
+  import util.ThreadPools.CPU
 
-  def getAllTags: Try[Seq[Tag]] = {
+  def getAllTags: Future[Seq[Tag]] = {
     neo4JReadDao.getAllTags
   }
 
-  def getAllQuestions: Try[Seq[Question]] = {
+  def getAllQuestions: Future[Seq[Question]] = {
     val namesT = userService.getUserFullNameMap
     val questionsT = neo4JReadDao.getQuestions
     for {
@@ -26,7 +26,7 @@ class ReadService(neo4JReadDao: Neo4JReadDao, userService: UserService) {
     }
   }
 
-  def getQuestionThread(questionId: UUID): Try[Option[QuestionThread]] = {
+  def getQuestionThread(questionId: UUID): Future[Option[QuestionThread]] = {
     val maybeThreadT = neo4JReadDao.getQuestionThread(questionId)
     val namesT = userService.getUserFullNameMap
     for {

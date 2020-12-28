@@ -1,60 +1,61 @@
 package dao
 
 import java.util.UUID
-
 import com.appliedscala.events.LogRecord
 import com.appliedscala.events.answer._
 import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
 import model.{Answer, Question, QuestionThread, Tag}
+
 import java.time.ZonedDateTime
 import org.neo4j.driver.Record
 import services.{Neo4JQuery, Neo4JQueryExecutor, Neo4JUpdate}
 import util.BaseTypes
 
-import scala.util.Try
+import scala.concurrent.Future
 
 /**
   * Created by denis on 11/16/16.
   */
 class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
-  private def clear(fromScratch: Boolean): Try[Unit] = {
+  import util.ThreadPools.CPU
+  private def clear(fromScratch: Boolean): Future[Unit] = {
     if (fromScratch) {
       val update = "MATCH (all) DETACH DELETE all"
       queryExecutor.executeUpdate(Neo4JQuery.simple(update)).map(_ => ())
-    } else Try.apply(())
+    } else Future.successful(())
   }
 
-  private def rebuildState(events: Seq[LogRecord]): Try[Unit] = {
+  private def rebuildState(events: Seq[LogRecord]): Future[Unit] = {
     val updates = events.flatMap { event =>
       prepareUpdates(event).queries
     }
     queryExecutor.executeBatch(updates)
   }
 
-  def refreshState(events: Seq[LogRecord], fromScratch: Boolean): Try[Unit] = {
+  def refreshState(events: Seq[LogRecord], fromScratch: Boolean): Future[Unit] = {
     for {
       _ <- clear(fromScratch)
       _ <- rebuildState(events)
     } yield ()
   }
 
-  def handleEvent(event: LogRecord): Unit = {
+  def handleEvent(event: LogRecord): Future[Unit] = {
     val updates = prepareUpdates(event)
-    updates.queries.foreach { update =>
+    Future.traverse(updates.queries) { update =>
       queryExecutor.executeUpdate(update)
-    }
+    }.map(_ => ())
   }
 
-  def handleEventWithUpdate(
-     logRecord: LogRecord)(updateBlock: Option[UUID] => Unit): Unit = {
+  def handleEventWithUpdate(logRecord: LogRecord)(updateBlock: Option[UUID] => Unit): Future[Unit] = {
     val updateInfo = prepareUpdates(logRecord)
-    updateInfo.queries.foreach { update =>
+    Future.traverse(updateInfo.queries) { update =>
       queryExecutor.executeUpdate(update)
+    }.map { _ =>
+      updateBlock(updateInfo.updateId)
     }
-    updateBlock(updateInfo.updateId)
   }
 
   private def prepareUpdates(record: LogRecord): Neo4JUpdate = {
@@ -104,7 +105,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     }
   }
 
-  def getAllTags: Try[Seq[Tag]] = {
+  def getAllTags: Future[Seq[Tag]] = {
     val query =
       """MATCH (t: Tag) RETURN t.tagId as tagId,
        t.tagText as tagText ORDER BY tagText"""
@@ -118,7 +119,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     }
   }
 
-  def getQuestion(questionId: UUID): Try[Option[Question]] = {
+  def getQuestion(questionId: UUID): Future[Option[Question]] = {
     val queryQuestion = """MATCH (u:User)-[:WROTE]->(q:Question
          {id: $questionId })-[:BELONGS]->(t: Tag)
          RETURN q.title as title, q.details as details, q.id as question_id,
@@ -131,7 +132,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     questionT
   }
 
-  def getQuestionThread(questionId: UUID): Try[Option[QuestionThread]] = {
+  def getQuestionThread(questionId: UUID): Future[Option[QuestionThread]] = {
     for {
       maybeQuestion <- getQuestion(questionId)
       answers <- getAnswers(questionId)
@@ -140,7 +141,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     }
   }
 
-  def getAnswers(questionId: UUID): Try[Seq[Answer]] = {
+  def getAnswers(questionId: UUID): Future[Seq[Answer]] = {
     val queryAnswer =
       """MATCH (a:Answer)-[:ANSWERS]->(Question {id: $questionId })
          OPTIONAL MATCH (u:User)-[:UPVOTES]->(a)
@@ -190,7 +191,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     question
   }
 
-  def getQuestions: Try[Seq[Question]] = {
+  def getQuestions: Future[Seq[Question]] = {
     val query =
       """
          MATCH (u:User)-[:WROTE]->(q:Question)-[:BELONGS]->(t: Tag)

@@ -49,7 +49,7 @@ class MessageLogRegistry(configuration: Configuration, actorSystem: ActorSystem)
   override def registerConsumer(queue: String, consumer: IMessageConsumer): Unit = {
     val ConsumerParams(groupName, topics) = parseConsumerParams(queue)
     Consumer.atMostOnceSource(consumerSettings(groupName),
-      Subscriptions.topics(topics)).mapAsync(1) { msg =>
+      Subscriptions.topics(topics)).mapAsync(parallelism = 1) { msg =>
       val event = msg.value()
       consumer.messageReceived(event)
       Future.successful(msg)

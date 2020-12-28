@@ -12,9 +12,6 @@ extends IMessageConsumer {
   registry.registerConsumer("log.*", this)
 
   override def messageReceived(event: Array[Byte]): Unit = {
-    val maybeGenericEnvelope = LogRecord.decode(event)
-    maybeGenericEnvelope.foreach { envelope =>
-      logDao.insertLogRecord(envelope)
-    }
+    logDao.insertLogRecord(LogRecord.decode(event))
   }
 }

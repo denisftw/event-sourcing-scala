@@ -1,6 +1,5 @@
 package services
 
-import actors.{EventStreamActor, ValidationActor, WSStreamActor}
 import akka.stream.Materializer
 import dao.{LogDao, Neo4JReadDao}
 import play.api.Logger
@@ -17,40 +16,37 @@ import scala.util.{Failure, Success, Try}
   * Created by denis on 12/12/16.
   */
 import akka.actor.ActorSystem
-class RewindService(actorSystem: ActorSystem,
+class RewindService(actorSystem: ActorSystem, clientBroadcastService: ClientBroadcastService,
                     validationService: ValidationService,
                     neo4JReadDao: Neo4JReadDao, logDao: LogDao)(implicit mat: Materializer) {
 
   val log = Logger(this.getClass)
 
-  private def message2Try(errorMessage: Option[String]): Try[Unit] = {
+  private def message2Try(errorMessage: Option[String]): Future[Unit] = {
     errorMessage match {
-      case None => Success(())
-      case Some(msg) => Failure(new Exception(msg))
+      case None => Future.successful(())
+      case Some(msg) => Future.failed(new Exception(msg))
     }
   }
 
   import util.ThreadPools.CPU
 
   private def recreateState(upTo: ZonedDateTime): Future[Unit] = {
-    val bufferSize = 200
-
     // Resetting the state
-    val readResetF = Future.fromTry(neo4JReadDao.refreshState(Nil,
-      fromScratch = true))
-    val validationResetF = validationService.refreshState(Nil,
-      fromScratch = true)
+    val readResetF = neo4JReadDao.refreshState(Nil, fromScratch = true)
+    val validationResetF = validationService.refreshState(Nil, fromScratch = true)
     val resetF = for {
       _ <- readResetF
       _ <- validationResetF
     } yield ()
 
+    val bufferSize = 200
     resetF.flatMap { _ =>
       logDao.getLogRecordStream(Some(upTo)).flatMap { eventSource =>
         eventSource.grouped(bufferSize).map { events =>
           for {
-            _ <- Future.fromTry(neo4JReadDao.refreshState(events, fromScratch = false))
-            _ <- validationService.refreshState(events, fromScratch = true).map(message2Try).flatMap(Future.fromTry)
+            _ <- neo4JReadDao.refreshState(events, fromScratch = false)
+            _ <- validationService.refreshState(events, fromScratch = true).map(message2Try)
           } yield ()
         }.run().map(_ => ())
       }
@@ -85,8 +81,7 @@ class RewindService(actorSystem: ActorSystem,
         log.info("The state was successfully rebuild")
         val update = ServerSentMessage.create("stateRebuilt",
           JsBoolean.apply(true))
-        val esActor = actorSystem.actorSelection(WSStreamActor.pathPattern)
-        esActor ! WSStreamActor.DataUpdated(update.json)
+        clientBroadcastService.broadcastUpdate(update.json)
     }
   }
 }

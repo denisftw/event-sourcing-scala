@@ -20,7 +20,7 @@ import scala.util.Try
 class LogDao {
   import util.ThreadPools.IO
 
-  def insertLogRecord(event: LogRecord): Try[Unit] = Try {
+  def insertLogRecord(event: LogRecord): Future[Unit] = Future {
     NamedDB(Symbol("eventstore")).localTx { implicit session =>
       val jsonStr = event.data.toString()
       sql"""insert into logs(record_id, action_name, event_data, timestamp)

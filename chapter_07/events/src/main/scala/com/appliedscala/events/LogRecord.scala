@@ -18,8 +18,8 @@ case class LogRecord(id: UUID, action: String,
 object LogRecord {
   val writes = Json.writes[LogRecord]
   val reads = Json.reads[LogRecord]
-  def decode(bytes: Array[Byte]): Option[LogRecord] = {
-    Json.parse(bytes).asOpt[LogRecord](reads)
+  def decode(bytes: Array[Byte]): LogRecord = {
+    Json.parse(bytes).as[LogRecord](reads)
   }
   def fromEvent(eventData: EventData): LogRecord = {
     LogRecord(UUID.randomUUID(), eventData.action,
