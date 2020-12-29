@@ -1,15 +1,16 @@
 package services
 
 import org.neo4j.driver.summary.SummaryCounters
-import org.neo4j.driver.{AuthTokens, GraphDatabase, Session}
+import org.neo4j.driver.{AuthTokens, GraphDatabase}
 
 import java.util.UUID
 import org.neo4j.driver.Record
-
-import scala.util.Using
+import org.neo4j.driver.async.AsyncSession
 import play.api.{Logger => PlayLogger}
 
+import java.util.concurrent.CompletionStage
 import scala.concurrent.Future
+import scala.util.Using
 
 case class Neo4JUpdate(queries: Seq[Neo4JQuery], updateId: Option[UUID] = None)
 case class Neo4JQuery(query: String, params: Map[String, AnyRef]) {
@@ -28,20 +29,17 @@ class Neo4JQueryExecutor(configuration: Configuration) {
   private val log = PlayLogger(this.getClass)
   private val config = configuration.get[Configuration]("neo4j")
 
-  private val driver = GraphDatabase.driver(config.get[String]("url"),
-    AuthTokens.basic(config.get[String]("username"), config.get[String]("password")))
+  private val driver = GraphDatabase.driver(
+    config.get[String]("url"),
+    AuthTokens.basic(
+      config.get[String]("username"),
+      config.get[String]("password")
+    )
+  )
 
   import util.ThreadPools.IO
 
-  private def doWithSession[A](block: Session => A): Future[A] = {
-    Future {
-      Using.resource(driver.session()) { session =>
-        block(session)
-      }
-    }
-  }
-
-  def executeSequentially(update: Neo4JUpdate): Future[Unit] = Future.delegate {
+  def executeSequentially(update: Neo4JUpdate): Future[Unit] = {
     executeBatch(update.queries)
   }
 
@@ -56,19 +54,28 @@ class Neo4JQueryExecutor(configuration: Configuration) {
     }
   }
 
+  import scala.jdk.CollectionConverters._
+  import scala.jdk.FutureConverters._
+
   def executeUpdate(update: Neo4JQuery): Future[SummaryCounters] = {
     doWithSession { session =>
-      val result = session.run(update.query, update.paramsAsJava)
-      val summary = result.consume()
-      summary.counters()
-    }
+      session.runAsync(update.query, update.paramsAsJava).
+        thenCompose(_.consumeAsync().thenApply(_.counters()))
+    }.asScala
   }
 
   def executeQuery(query: Neo4JQuery): Future[Seq[Record]] = {
     doWithSession { session =>
-      val result = session.run(query.query, query.paramsAsJava)
-      import scala.jdk.CollectionConverters._
-      result.asScala.toSeq
-    }
+      val result = session.runAsync(query.query, query.paramsAsJava)
+      result.thenCompose(_.listAsync())
+    }.asScala.map(_.asScala.toSeq)
+  }
+
+  private def doWithSession[A](block: AsyncSession => CompletionStage[A]):
+  CompletionStage[A] = {
+    val session = driver.asyncSession()
+    block(session).whenCompleteAsync((cursor, th) => {
+      session.closeAsync()
+    })
   }
 }
