@@ -43,18 +43,14 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
   }
 
   def handleEvent(event: LogRecord): Future[Unit] = {
-    val updates = prepareUpdates(event)
-    Future.traverse(updates.queries) { update =>
-      queryExecutor.executeUpdate(update)
-    }.map(_ => ())
+    val update = prepareUpdates(event)
+    queryExecutor.executeSequentially(update)
   }
 
   def handleEventWithUpdate(logRecord: LogRecord)(updateBlock: Option[UUID] => Unit): Future[Unit] = {
-    val updateInfo = prepareUpdates(logRecord)
-    Future.traverse(updateInfo.queries) { update =>
-      queryExecutor.executeUpdate(update)
-    }.map { _ =>
-      updateBlock(updateInfo.updateId)
+    val update = prepareUpdates(logRecord)
+    queryExecutor.executeSequentially(update).map { _ =>
+      updateBlock(update.updateId)
     }
   }
 

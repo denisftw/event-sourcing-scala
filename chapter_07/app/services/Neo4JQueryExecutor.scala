@@ -6,7 +6,7 @@ import org.neo4j.driver.{AuthTokens, GraphDatabase, Session}
 import java.util.UUID
 import org.neo4j.driver.Record
 
-import scala.util.{Try, Using}
+import scala.util.Using
 import play.api.{Logger => PlayLogger}
 
 import scala.concurrent.Future
@@ -25,10 +25,10 @@ object Neo4JQuery {
 import play.api.Configuration
 class Neo4JQueryExecutor(configuration: Configuration) {
 
-  val log = PlayLogger(this.getClass)
-  val config = configuration.get[Configuration]("neo4j")
+  private val log = PlayLogger(this.getClass)
+  private val config = configuration.get[Configuration]("neo4j")
 
-  val driver = GraphDatabase.driver(config.get[String]("url"),
+  private val driver = GraphDatabase.driver(config.get[String]("url"),
     AuthTokens.basic(config.get[String]("username"), config.get[String]("password")))
 
   import util.ThreadPools.IO
@@ -41,17 +41,17 @@ class Neo4JQueryExecutor(configuration: Configuration) {
     }
   }
 
-  def executeBatch(updates: Seq[Neo4JQuery]): Future[Unit] = {
-    Future.delegate {
-      Using.resource(driver.session()) { session =>
-        Using.resource(session.beginTransaction()) { transaction =>
-          val result = Future.traverse(updates) { update =>
-            transaction.run(update.query, update.paramsAsJava)
-            Future.successful(())
-          }
-          transaction.commit()
-          result.map(_ => ())
+  def executeSequentially(update: Neo4JUpdate): Future[Unit] = Future.delegate {
+    executeBatch(update.queries)
+  }
+
+  def executeBatch(updates: Seq[Neo4JQuery]): Future[Unit] = Future {
+    Using.resource(driver.session()) { session =>
+      Using.resource(session.beginTransaction()) { transaction =>
+        updates.foreach { update =>
+          transaction.run(update.query, update.paramsAsJava)
         }
+        transaction.commit()
       }
     }
   }

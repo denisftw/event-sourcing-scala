@@ -3,20 +3,21 @@ package services
 import actors.QuestionThreadIdChanged
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import monix.reactive.subjects.BehaviorSubject
-import play.api.libs.json.{JsNull, JsObject, JsString, JsValue}
+import io.reactivex.rxjava3.processors.PublishProcessor
+import org.reactivestreams.Subscriber
+import play.api.libs.json.{JsObject, JsString, JsValue}
 
 import java.util.UUID
 import scala.concurrent.Future
 
 class ClientBroadcastService {
   private var connectedClients = Map.empty[UUID, ConnectedClient]
-  import util.ThreadPools.CPUScheduler
+  import util.ThreadPools.CPU
 
   def registerClient(userId: Option[UUID]): Flow[JsValue, JsValue, NotUsed] = {
-    val subject = BehaviorSubject.apply[JsValue](JsNull)
+    val subject = PublishProcessor.create[JsValue]()
     val clientId = UUID.randomUUID()
-    val toClient = Source.fromPublisher(subject.toReactivePublisher).
+    val toClient = Source.fromPublisher(subject).
       watchTermination() { (_, done) =>
         done.andThen { case _ =>
           removeDisconnectedClient(clientId)
@@ -25,8 +26,7 @@ class ClientBroadcastService {
     val client = ConnectedClient(userId, None, subject)
     addConnectedClient(clientId, client)
     val fromClient = Sink.foreach[JsValue](clientMessageReceived(clientId))
-    val flow = Flow.fromSinkAndSource(fromClient, toClient)
-    flow
+    Flow.fromSinkAndSource(fromClient, toClient)
   }
 
   def broadcastUpdate(data: JsValue): Future[Unit] = Future {
@@ -35,7 +35,7 @@ class ClientBroadcastService {
     }
   }
 
-  def broadcastQuestionThreadUpdated(questionThreadId: UUID, data: JsValue): Future[Unit] = Future {
+  def broadcastQuestionThreadUpdate(questionThreadId: UUID, data: JsValue): Future[Unit] = Future {
     connectedClients.values.filter(_.questionThreadId.contains(questionThreadId)).foreach { client =>
       client.out.onNext(data)
     }
@@ -56,7 +56,8 @@ class ClientBroadcastService {
   private def updateQuestionThread(clientId: UUID, newQuestionThreadId: Option[UUID]): Unit = {
     connectedClients.synchronized {
       connectedClients.get(clientId).foreach { client =>
-        client.copy(questionThreadId = newQuestionThreadId)
+        val updated = client.copy(questionThreadId = newQuestionThreadId)
+        connectedClients += (clientId -> updated)
       }
     }
   }
@@ -74,7 +75,7 @@ class ClientBroadcastService {
   }
 
   case class ConnectedClient(userId: Option[UUID], questionThreadId: Option[UUID],
-                             out: BehaviorSubject[JsValue])
+                             out: Subscriber[JsValue])
 }
 
 

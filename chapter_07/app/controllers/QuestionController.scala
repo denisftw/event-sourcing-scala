@@ -45,7 +45,7 @@ class QuestionController(components: ControllerComponents, questionEventProducer
   }
 
   import scala.util.{Failure, Success}
-  def getQuestions = Action.async { implicit request =>
+  def getQuestions() = Action.async { implicit request =>
     readService.getAllQuestions.map { questions =>
       Ok(Json.toJson(questions))
     }
@@ -60,7 +60,7 @@ class QuestionController(components: ControllerComponents, questionEventProducer
 
   import play.api.data.Form
   import play.api.data.Forms._
-  val createQuestionForm = Form {
+  private val createQuestionForm = Form {
     mapping(
       "title" -> nonEmptyText,
       "details" -> optional(text),
@@ -68,7 +68,7 @@ class QuestionController(components: ControllerComponents, questionEventProducer
     )(CreateQuestionData.apply)(CreateQuestionData.unapply)
   }
 
-  val deleteQuestionForm = Form {
+  private val deleteQuestionForm = Form {
     mapping(
       "id" -> uuid
     )(DeleteQuestionData.apply)(DeleteQuestionData.unapply)

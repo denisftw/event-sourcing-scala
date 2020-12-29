@@ -31,7 +31,7 @@ class AnswerEventConsumer(neo4JReadDao: Neo4JReadDao, clientBroadcastService: Cl
         readService.getQuestionThread(updateId).map { maybeThread =>
           maybeThread.map { thread =>
             val update = ServerSentMessage.create("questionThread", thread)
-            clientBroadcastService.broadcastQuestionThreadUpdated(thread.question.id, update.json)
+            clientBroadcastService.broadcastQuestionThreadUpdate(thread.question.id, update.json)
           }
         }
       }

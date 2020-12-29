@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
   "org.scalikejdbc" %% "scalikejdbc" % "3.5.0",
   "org.scalikejdbc" %% "scalikejdbc-streams" % "3.5.0",
   "org.scalikejdbc" %% "scalikejdbc-config"  % "3.5.0",
-  "io.monix" %% "monix-reactive" % "3.3.0",
+  "io.reactivex.rxjava3" % "rxjava" % "3.0.8",
   "ch.qos.logback"  %  "logback-classic" % "1.2.3",
   "de.svenkubiak" % "jBCrypt" % "0.4.1",
   "org.neo4j.driver" % "neo4j-java-driver" % "4.2.0",

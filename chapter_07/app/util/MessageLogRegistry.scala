@@ -19,10 +19,6 @@ class MessageLogRegistry(configuration: Configuration, actorSystem: ActorSystem)
   private val log = Logger(this.getClass)
   private val bootstrapServers = configuration.get[String]("kafka.bootstrap.servers")
 
-  private val producerSettings = ProducerSettings(actorSystem,
-    new ByteArraySerializer, new ByteArraySerializer)
-    .withBootstrapServers(bootstrapServers)
-
   private def consumerSettings(groupName: String) = ConsumerSettings(actorSystem,
     new ByteArrayDeserializer, new ByteArrayDeserializer)
     .withBootstrapServers(configuration.get[String]("kafka.bootstrap.servers"))
@@ -42,6 +38,9 @@ class MessageLogRegistry(configuration: Configuration, actorSystem: ActorSystem)
   }
 
   override def createProducer(topic: String): IMessageProducer = {
+    val producerSettings = ProducerSettings(actorSystem,
+      new ByteArraySerializer, new ByteArraySerializer)
+      .withBootstrapServers(bootstrapServers)
     val producer = producerSettings.createKafkaProducer()
     (bytes: Array[Byte]) => producer.send(new ProducerRecord(topic, bytes))
   }

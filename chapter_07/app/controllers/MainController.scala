@@ -5,8 +5,6 @@ import model._
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import security.{UserAuthAction, UserAwareAction, UserAwareRequest}
-import akka.actor.ActorSystem
-import akka.stream.{Materializer}
 import services.{AuthService, ClientBroadcastService, ConsumerAggregator, RewindService}
 
 
@@ -18,14 +16,14 @@ class MainController(components: ControllerComponents, assets: Assets,
 
   import util.ThreadPools.CPU
 
-  def index = userAwareAction { request =>
+  def index() = userAwareAction { request =>
     Ok(views.html.pages.react(buildNavData(request),
       WebPageData("Home")))
   }
 
   def indexParam(unused: String) = index
 
-  def error500 = Action {
+  def error500() = Action {
     InternalServerError(views.html.errorPage())
   }
 
@@ -33,7 +31,7 @@ class MainController(components: ControllerComponents, assets: Assets,
     NavigationData(request.user, isLoggedIn = request.user.isDefined)
   }
 
-  def serverEventStream = userAwareAction { request =>
+  def serverEventStream() = userAwareAction { request =>
     ???
   }
 

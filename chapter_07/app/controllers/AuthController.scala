@@ -12,16 +12,16 @@ class AuthController(components: ControllerComponents, authService: AuthService,
                      userAuthAction: UserAuthAction) extends AbstractController(components) {
 
   import util.ThreadPools.CPU
-  def logout = userAuthAction { request =>
+  def logout() = userAuthAction { request =>
     authService.destroySession(request.request)
     Redirect("/").discardingCookies(DiscardingCookie(authService.cookieHeader))
   }
 
-  def login = Action { request =>
+  def login() = Action { request =>
     Ok(views.html.security.login(None))
   }
 
-  def register = Action {
+  def register() = Action {
     Ok(views.html.security.signUp(None))
   }
 

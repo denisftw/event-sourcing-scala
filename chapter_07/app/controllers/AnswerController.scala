@@ -87,21 +87,21 @@ class AnswerController(components: ControllerComponents, userAuthAction: UserAut
     )
   }
 
-  val createAnswerForm = Form {
+  private val createAnswerForm = Form {
     mapping(
       "questionId" -> uuid,
       "answerText" -> nonEmptyText
     )(CreateAnswerData.apply)(CreateAnswerData.unapply)
   }
 
-  val deleteAnswerForm = Form {
+  private val deleteAnswerForm = Form {
     mapping(
       "questionId" -> uuid,
       "answerId" -> uuid
     )(DeleteAnswerData.apply)(DeleteAnswerData.unapply)
   }
 
-  val updateAnswerForm = Form {
+  private val updateAnswerForm = Form {
     mapping(
       "questionId" -> uuid,
       "answerId" -> uuid,
@@ -109,7 +109,7 @@ class AnswerController(components: ControllerComponents, userAuthAction: UserAut
     )(UpdateAnswerData.apply)(UpdateAnswerData.unapply)
   }
 
-  val upvoteAnswerForm = Form {
+  private val upvoteAnswerForm = Form {
     mapping(
       "questionId" -> uuid,
       "answerId" -> uuid

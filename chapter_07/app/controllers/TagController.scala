@@ -29,7 +29,7 @@ class TagController(components: ControllerComponents, tagEventProducer: TagEvent
     )
   }
 
-  def getTags = Action.async { implicit request =>
+  def getTags() = Action.async { implicit request =>
     readService.getAllTags.map { tags =>
       Ok(Json.toJson(tags))
     }

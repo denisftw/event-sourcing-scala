@@ -22,7 +22,7 @@ class AdminController(components: ControllerComponents, userAuthAction: UserAuth
   import util.ThreadPools.CPU
   val log = Logger(this.getClass)
 
-  def admin = userAuthAction { request =>
+  def admin() = userAuthAction { request =>
     if (request.user.isAdmin) {
       Ok(views.html.pages.admin(NavigationData(Some(request.user),
         isLoggedIn = true), WebPageData("Admin")))
@@ -46,7 +46,7 @@ class AdminController(components: ControllerComponents, userAuthAction: UserAuth
     } else Future.successful(Forbidden)
   }
 
-  val rewindRequestForm = Form {
+  private val rewindRequestForm = Form {
     mapping(
       "destination" -> BaseTypes.zonedDateTimeMapping
     )(RewindRequestData.apply)(RewindRequestData.unapply)

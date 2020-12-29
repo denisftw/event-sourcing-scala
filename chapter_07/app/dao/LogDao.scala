@@ -34,7 +34,7 @@ class LogDao {
     val upTo = maybeUpTo.getOrElse(ZonedDateTime.now())
     val publisher = NamedDB(Symbol("eventstore")).readOnlyStream {
       sql"""select * from logs where timestamp <= $upTo order by timestamp""".
-        map(rs2LogRecord).iterator
+        map(rs2LogRecord).iterator()
     }
     Source.fromPublisher(publisher)
   }
