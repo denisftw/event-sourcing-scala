@@ -1,54 +1,67 @@
 package actors
 
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.pattern.pipe
+import akka.stream.Materializer
+import akka.stream.scaladsl.{Sink, Source}
 import com.appliedscala.events.LogRecord
-import java.util.UUID
 
+import java.util.UUID
 import com.appliedscala.events.answer._
 import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
 import scalikejdbc._
 
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 /**
   * Created by denis on 12/5/16.
   */
-class ValidationActor extends Actor {
+class ValidationActor extends Actor with ActorLogging {
   import ValidationActor._
+  import util.ThreadPools.CPU
   override def receive: Receive = {
-    case ValidateEventRequest(event) => sender() !
-      processSingleEvent(event, skipValidation = false)
-    case RefreshStateCommand(events, fromScratch) => sender() ! {
-      val resetResult = resetState(fromScratch)
-      resetResult match {
-        case Some(_) => resetResult
+    case ValidateEventRequest(event) =>
+      pipe(processSingleEvent(event, skipValidation = false)).to(sender())
+    case RefreshStateCommand(events, fromScratch) =>
+      val originalSender = sender()
+      pipe(resetState(fromScratch).map { resetResult =>
+        ProcessEventsCommand(originalSender, resetResult, events)
+      }).to(self)
+    case ProcessEventsCommand(originalSender, resetResult, events) =>
+      (resetResult match {
+        case Some(value) => Future.successful(Some(value))
         case None => processEvents(events, skipValidation = true)
+      }).andThen {
+        case Failure(exception) => originalSender ! Some(exception.getMessage)
+        case Success(value) => originalSender ! value
       }
-    }
     case _ => sender() ! Some("Unknown message type!")
   }
 
-  private def validateTagCreated(tagText: String, userId: UUID): Option[String] = {
+  import util.ThreadPools.IO
+
+  private def validateTagCreated(tagText: String, userId: UUID): Future[Option[String]] = {
     validateUser(userId) {
-      val maybeExistingT = Try {
+      val maybeExistingT = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
           sql"select tag_id from tags where tag_text = $tagText".
             map(_.string("tag_id")).headOption().apply()
         }
       }
-      maybeExistingT match {
-        case Success(Some(_)) => Some("The tag already exists!")
-        case Success(None) => None
-        case _ => Some("Validation state exception!")
+      maybeExistingT.transform {
+        case Success(Some(_)) => Success(Some("The tag already exists!"))
+        case Success(None) => Success(None)
+        case _ => Success(Some("Validation state exception!"))
       }
     }
   }
 
-  private def updateTagCreated(tagId: UUID, tagText: String): Option[String] = {
-    invokeUpdate{
+  private def updateTagCreated(tagId: UUID, tagText: String): Future[Option[String]] = {
+    invokeUpdate {
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"insert into tags(tag_id, tag_text) values($tagId, $tagText)".
           update().apply()
@@ -56,25 +69,27 @@ class ValidationActor extends Actor {
     }
   }
 
-  private def validateTagDeleted(tagId: UUID, userId: UUID): Option[String] = {
+  private def validateTagDeleted(tagId: UUID, userId: UUID): Future[Option[String]] = {
     validateUser(userId) {
-      val maybeExistingTag = NamedDB(Symbol("validation")).readOnly { implicit session =>
-        sql"select tag_id from tags tn where tag_id = ${tagId}".
-          map(_.string("tag_id")).headOption().apply()
-      }
-      val maybeDependentQuestions = NamedDB(Symbol("validation")).readOnly { implicit session =>
-        sql"select question_id from tag_question tq where tag_id = ${tagId}".
-          map(_.string("question_id")).list().apply()
-      }
-      (maybeExistingTag, maybeDependentQuestions) match {
-        case (None, _) => Some("This tag doesn't exist!")
-        case (_, head :: tail) => Some("There are questions that depend on this tag!")
-        case (_, Nil) => None
+      Future {
+        val maybeExistingTag = NamedDB(Symbol("validation")).readOnly { implicit session =>
+          sql"select tag_id from tags tn where tag_id = ${tagId}".
+            map(_.string("tag_id")).headOption().apply()
+        }
+        val maybeDependentQuestions = NamedDB(Symbol("validation")).readOnly { implicit session =>
+          sql"select question_id from tag_question tq where tag_id = ${tagId}".
+            map(_.string("question_id")).list().apply()
+        }
+        (maybeExistingTag, maybeDependentQuestions) match {
+          case (None, _) => Some("This tag doesn't exist!")
+          case (_, head :: tail) => Some("There are questions that depend on this tag!")
+          case (_, Nil) => None
+        }
       }
     }
   }
 
-  private def updateTagDeleted(tagId: UUID): Option[String] = {
+  private def updateTagDeleted(tagId: UUID): Future[Option[String]] = {
     invokeUpdate {
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from tags where tag_id = ${tagId}".update().apply()
@@ -82,16 +97,16 @@ class ValidationActor extends Actor {
     }
   }
 
-  private def validateUserActivated(userId: UUID): Option[String] = {
+  private def validateUserActivated(userId: UUID): Future[Option[String]] = {
     val isActivatedT = isActivated(userId)
-    isActivatedT match {
-      case Success(true) => Some("The user is already activated!")
-      case Failure(_) => Some("Validation state exception")
-      case Success(false) => None
+    isActivatedT.transform {
+      case Success(true) => Success(Some("The user is already activated!"))
+      case Failure(_) => Success(Some("Validation state exception"))
+      case Success(false) => Success(None)
     }
   }
 
-  private def updateUserActivated(userId: UUID): Option[String] = {
+  private def updateUserActivated(userId: UUID): Future[Option[String]] = {
     invokeUpdate{
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"insert into active_users(user_id) values($userId)".
@@ -100,17 +115,17 @@ class ValidationActor extends Actor {
     }
   }
 
-  private def validateUser(userId: UUID)(block: => Option[String]): Option[String] = {
+  private def validateUser(userId: UUID)(block: => Future[Option[String]]): Future[Option[String]] = {
     val isActivatedT = isActivated(userId)
-    isActivatedT match {
-      case Success(false) => Some("The user is not activated!")
-      case Failure(_) => Some("Validation state exception!")
+    isActivatedT.transformWith {
+      case Success(false) => Future.successful(Some("The user is not activated!"))
+      case Failure(_) => Future.successful(Some("Validation state exception!"))
       case Success(true) => block
     }
   }
 
-  private def isActivated(userId: UUID): Try[Boolean] = {
-    Try {
+  private def isActivated(userId: UUID): Future[Boolean] = {
+    Future {
       NamedDB(Symbol("validation")).readOnly { implicit session =>
         sql"select user_id from active_users where user_id = $userId".
           map(_.string("user_id")).headOption().apply().isDefined
@@ -118,16 +133,16 @@ class ValidationActor extends Actor {
     }
   }
 
-  private def validateUserDeactivated(userId: UUID): Option[String] = {
+  private def validateUserDeactivated(userId: UUID): Future[Option[String]] = {
     val isActivatedT = isActivated(userId)
-    isActivatedT match {
-      case Success(true) => None
-      case Failure(_) => Some("Validation state exception")
-      case Success(false) => Some("The user is already deactivated!")
+    isActivatedT.transform {
+      case Success(true) => Success(None)
+      case Failure(_) => Success(Some("Validation state exception"))
+      case Success(false) => Success(Some("The user is already deactivated!"))
     }
   }
 
-  private def updateUserDeactivated(userId: UUID): Option[String] = {
+  private def updateUserDeactivated(userId: UUID): Future[Option[String]] = {
     invokeUpdate{
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from active_users where user_id = $userId".
@@ -137,28 +152,28 @@ class ValidationActor extends Actor {
   }
 
   private def validateQuestionDeleted(questionId: UUID, userId: UUID):
-      Option[String] = {
+  Future[Option[String]] = {
     validateUser(userId) {
-      val maybeQuestionOwnerT = Try {
+      val maybeQuestionOwnerT = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
           sql"select user_id from question_user where question_id = $questionId".
             map(_.string("user_id")).headOption().apply()
         }
       }
-      maybeQuestionOwnerT match {
-        case Success(None) => Some("The question doesn't exist!")
+      maybeQuestionOwnerT.transform {
+        case Success(None) => Success(Some("The question doesn't exist!"))
         case Success(Some(questionOwner)) =>
           if (questionOwner != userId.toString) {
-            Some("This user has no rights to delete this question!")
+            Success(Some("This user has no rights to delete this question!"))
           } else {
-            None
+            Success(None)
           }
-        case _ => Some("Validation state exception!")
+        case _ => Success(Some("Validation state exception!"))
       }
     }
   }
 
-  private def updateQuestionDeleted(id: UUID): Option[String] = {
+  private def updateQuestionDeleted(id: UUID): Future[Option[String]] = {
     invokeUpdate {
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from question_user where question_id = $id".update().apply()
@@ -166,9 +181,9 @@ class ValidationActor extends Actor {
     }
   }
 
-  private def validateQuestionCreated(questionId: UUID, userId: UUID, tags: Seq[UUID]): Option[String] = {
+  private def validateQuestionCreated(questionId: UUID, userId: UUID, tags: Seq[UUID]): Future[Option[String]] = {
     validateUser(userId) {
-      val existingTagsT = Try {
+      val existingTagsT = Future {
         NamedDB(Symbol("validation")).localTx { implicit session =>
           implicit val binderFactory: ParameterBinderFactory[UUID] = ParameterBinderFactory {
             value => (stmt, idx) => stmt.setObject(idx, value)
@@ -177,16 +192,16 @@ class ValidationActor extends Actor {
           sql"select * from tags where $tagIdsSql".map(_.string("tag_id")).list().apply().length
         }
       }
-      existingTagsT match {
-        case Failure(th) => Some("Validation state exception!")
-        case Success(num) if num == tags.length => None
-        case _ => Some("Some tags referenced by the question do not exist!")
+      existingTagsT.transform {
+        case Failure(th) => Success(Some("Validation state exception!"))
+        case Success(num) if num == tags.length => Success(None)
+        case _ => Success(Some("Some tags referenced by the question do not exist!"))
       }
     }
   }
 
   private def updateAnswerCreated(answerId: UUID, userId: UUID,
-      questionId: UUID): Option[String] = {
+      questionId: UUID): Future[Option[String]] = {
     invokeUpdate {
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"""insert into answer_user(answer_id, user_id)
@@ -198,9 +213,9 @@ class ValidationActor extends Actor {
   }
 
   private def validateAnswerCreated(answerId: UUID, userId: UUID,
-      questionId: UUID): Option[String] = {
+      questionId: UUID): Future[Option[String]] = {
     validateUser(userId) {
-      val resultT = Try {
+      val resultT = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
           val questionExists =
             sql"select * from question_user where question_id = ${questionId}".
@@ -217,36 +232,36 @@ class ValidationActor extends Actor {
         }
       }
 
-      resultT match {
-        case Success((false, _, _)) => Some("This question doesn't exist!")
+      resultT.transform {
+        case Success((false, _, _)) => Success(Some("This question doesn't exist!"))
         case Success((_, _, true)) =>
-          Some("Users can only give one answer to the question!")
-        case Success((_, true, _)) => Some("This answer already exists!")
-        case Success((true, _, _)) => None
-        case Failure(_) => Some("Validation state exception!")
+          Success(Some("Users can only give one answer to the question!"))
+        case Success((_, true, _)) => Success(Some("This answer already exists!"))
+        case Success((true, _, _)) => Success(None)
+        case Failure(_) => Success(Some("Validation state exception!"))
       }
     }
   }
 
-  private def validateAnswerDeleted(answerId: UUID, userId: UUID): Option[String] = {
+  private def validateAnswerDeleted(answerId: UUID, userId: UUID): Future[Option[String]] = {
     validateUser(userId) {
       val UserIdStr = userId.toString
-      val maybeAnswerOwnerT = Try {
+      val maybeAnswerOwnerT = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
           sql"select user_id from answer_user where answer_id = ${answerId}".
             map(_.string("user_id")).headOption().apply()
         }
       }
-      maybeAnswerOwnerT match {
-        case Success(None) => Some("The answer doesn't exists")
-        case Success(Some(UserIdStr)) => None
-        case Success(Some(_)) => Some("The answer was written by another user!")
-        case _ => Some("Validation state exception!")
+      maybeAnswerOwnerT.transform {
+        case Success(None) => Success(Some("The answer doesn't exists"))
+        case Success(Some(UserIdStr)) => Success(None)
+        case Success(Some(_)) => Success(Some("The answer was written by another user!"))
+        case _ => Success(Some("Validation state exception!"))
       }
     }
   }
 
-  private def updateAnswerDeleted(answerId: UUID): Option[String] = {
+  private def updateAnswerDeleted(answerId: UUID): Future[Option[String]] = {
     invokeUpdate {
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from answer_user where answer_id = ${answerId}".update().apply()
@@ -254,27 +269,27 @@ class ValidationActor extends Actor {
     }
   }
 
-  private def validateAnswerUpdated(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+  private def validateAnswerUpdated(answerId: UUID, userId: UUID, questionId: UUID): Future[Option[String]] = {
     val UserIdStr = userId.toString
-    val maybeAnswerOwnerT = Try {
+    val maybeAnswerOwnerT = Future {
       NamedDB(Symbol("validation")).readOnly { implicit session =>
         sql"select user_id from answer_user where answer_id = ${answerId}".
           map(_.string("user_id")).headOption().apply()
       }
     }
-    maybeAnswerOwnerT match {
-      case Success(None) => Some("The answer doesn't exists")
-      case Success(Some(UserIdStr)) => None
-      case Success(Some(_)) => Some("The answer was written by another user!")
-      case _ => Some("Validation state exception!")
+    maybeAnswerOwnerT.transform {
+      case Success(None) => Success(Some("The answer doesn't exists"))
+      case Success(Some(UserIdStr)) => Success(None)
+      case Success(Some(_)) => Success(Some("The answer was written by another user!"))
+      case _ => Success(Some("Validation state exception!"))
     }
   }
 
-  private def updateAnswerUpdated(): Option[String] = None
+  private def updateAnswerUpdated(): Future[Option[String]] = Future.successful(None)
 
-  private def validateAnswerUpvoted(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
+  private def validateAnswerUpvoted(answerId: UUID, userId: UUID, questionId: UUID): Future[Option[String]] = {
     val UserIdStr = userId.toString
-    val resultT = Try {
+    val resultT = Future {
       NamedDB(Symbol("validation")).readOnly { implicit session =>
         val questionExists =
           sql"select * from question_user where question_id = ${questionId}".
@@ -288,17 +303,17 @@ class ValidationActor extends Actor {
         (questionExists, answerAuthor, alreadyUpvoted)
       }
     }
-    resultT match {
-      case Success((false, _, _)) => Some("This question doesn't exist!")
-      case Success((_, None, _)) => Some("This answer doesn't exist!")
-      case Success((_, Some(UserIdStr), _)) => Some("Users cannot like their own answers!")
-      case Success((_, Some(_), true)) => Some("Users cannot like answers more than once!")
-      case Success((_, Some(_), false)) => None
-      case _ => Some("Validation state exception!")
+    resultT.transform {
+      case Success((false, _, _)) => Success(Some("This question doesn't exist!"))
+      case Success((_, None, _)) => Success(Some("This answer doesn't exist!"))
+      case Success((_, Some(UserIdStr), _)) => Success(Some("Users cannot like their own answers!"))
+      case Success((_, Some(_), true)) => Success(Some("Users cannot like answers more than once!"))
+      case Success((_, Some(_), false)) => Success(None)
+      case _ => Success(Some("Validation state exception!"))
     }
   }
 
-  private def updateAnswerUpvoted(answerId: UUID, userId: UUID): Option[String] = {
+  private def updateAnswerUpvoted(answerId: UUID, userId: UUID): Future[Option[String]] = {
     invokeUpdate {
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"insert into answer_upvoter(answer_id, upvoted_by_user_id) values(${answerId}, ${userId})".update().apply()
@@ -306,8 +321,8 @@ class ValidationActor extends Actor {
     }
   }
 
-  private def validateAnswerDownvoted(answerId: UUID, userId: UUID, questionId: UUID): Option[String] = {
-    val resultT = Try {
+  private def validateAnswerDownvoted(answerId: UUID, userId: UUID, questionId: UUID): Future[Option[String]] = {
+    val resultT = Future {
       NamedDB(Symbol("validation")).readOnly { implicit session =>
         val questionExists =
           sql"select * from question_user where question_id = ${questionId}".
@@ -318,15 +333,15 @@ class ValidationActor extends Actor {
         (questionExists, alreadyUpvoted)
       }
     }
-    resultT match {
-      case Success((false, _)) => Some("This question doesn't exist!")
-      case Success((_, true)) => None
-      case Success((_, false)) => Some("Users cannot downvote what they haven't upvoted")
-      case _ => Some("Validation state exception!")
+    resultT.transform {
+      case Success((false, _)) => Success(Some("This question doesn't exist!"))
+      case Success((_, true)) => Success(None)
+      case Success((_, false)) => Success(Some("Users cannot downvote what they haven't upvoted"))
+      case _ => Success(Some("Validation state exception!"))
     }
   }
 
-  private def updateAnswerDownvoted(answerId: UUID, userId: UUID): Option[String] = {
+  private def updateAnswerDownvoted(answerId: UUID, userId: UUID): Future[Option[String]] = {
     invokeUpdate {
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from answer_upvoter where answer_id = ${answerId} and upvoted_by_user_id = ${userId}".update().apply()
@@ -334,7 +349,7 @@ class ValidationActor extends Actor {
     }
   }
 
-  private def updateQuestionCreated(questionId: UUID, userId: UUID, tags: Seq[UUID]): Option[String] = {
+  private def updateQuestionCreated(questionId: UUID, userId: UUID, tags: Seq[UUID]): Future[Option[String]] = {
     invokeUpdate {
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"insert into question_user(question_id, user_id) values(${questionId}, ${userId})".update().apply()
@@ -345,60 +360,75 @@ class ValidationActor extends Actor {
     }
   }
 
-  private def invokeUpdate(block : => Any): Option[String] = {
-    val result = Try { block }
-    result match {
-      case Success(_) => None
-      case Failure(th) => Some("Validation state exception!")
+  private def invokeUpdate(block : => Any): Future[Option[String]] = {
+    val result = Future { block }
+    result.transform {
+      case Success(_) => Success(None)
+      case Failure(th) => Success(Some("Validation state exception!"))
     }
   }
 
-  private def resetState(fromScratch: Boolean): Option[String] = {
-    if (!fromScratch) None
+  private def resetState(fromScratch: Boolean): Future[Option[String]] = {
+    if (!fromScratch) Future.successful(None)
     else invokeUpdate {
       NamedDB(Symbol("validation")).localTx { implicit session =>
         sql"delete from tags where 1 > 0".update().apply()
         sql"delete from active_users where 1 > 0".update().apply()
-        sql"delete from question_user where 1 > 0".update.apply()
+        sql"delete from question_user where 1 > 0".update().apply()
         sql"delete from tag_question where 1 > 0".update().apply()
         sql"delete from answer_user where 1 > 0".update().apply()
-        sql"delete from question_answer where 1 > 0".update.apply()
+        sql"delete from question_answer where 1 > 0".update().apply()
         sql"delete from answer_upvoter where 1 > 0".update().apply()
       }
     }
   }
 
   private def validateAndUpdate(skipValidation: Boolean)
-     (validateBlock: => Option[String])
-     (updateBlock: => Option[String]): Option[String] = {
+     (validateBlock: => Future[Option[String]])
+     (updateBlock: => Future[Option[String]]): Future[Option[String]] = {
     if (skipValidation) {
       updateBlock
     } else {
       val validationResult = validateBlock
-      validationResult match {
-        case None => updateBlock
+      validationResult.transformWith {
+        case Success(None) => updateBlock
         case _ => validationResult
       }
     }
   }
 
-  private def processEvents(events: Seq[LogRecord],
-      skipValidation: Boolean): Option[String] = {
-    var lastResult: Option[String] = None
-    import scala.util.control.Breaks._
-    breakable {
-      events.foreach { event =>
-        lastResult match {
-          case None => lastResult = processSingleEvent(event, skipValidation)
-          case Some(_) => break()
-        }
+  implicit val mat = Materializer(context)
+  private def processEvents(events: Seq[LogRecord], skipValidation: Boolean): Future[Option[String]] = {
+    log.info(s"Processing ${events.size} events, skip validation: $skipValidation")
+    val result = Source.apply(events).foldAsync(Option.empty[String]) { (previousResult, nextEvent) =>
+      previousResult match {
+        case None => processSingleEvent(nextEvent, skipValidation)
+        case _ => Future.successful(previousResult)
+      }
+    }.runWith(Sink.last)
+    result
+  }
+
+  // Not used
+  private def processEventsNonTailRec(events: Seq[LogRecord], skipValidation: Boolean): Future[Option[String]] = {
+    def processEventsRec(xs: List[LogRecord], previous: Future[Option[String]]): Future[Option[String]] = {
+      xs match {
+        case Nil => previous
+        case ::(event, rest) =>
+          previous.transformWith {
+            case Failure(_) => Future.successful(Some("Exception occurred"))
+            case Success(None) =>
+              val result = processSingleEvent(event, skipValidation)
+              processEventsRec(rest, result)
+            case Success(error) => Future.successful(error)
+          }
       }
     }
-    lastResult
+    processEventsRec(events.toList, Future.successful(None))
   }
 
   private def processSingleEvent(event: LogRecord,
-      skipValidation: Boolean): Option[String] = {
+      skipValidation: Boolean): Future[Option[String]] = {
     event.action match {
       case UserActivated.actionName =>
         val decoded = event.data.as[UserActivated]
@@ -465,7 +495,7 @@ class ValidationActor extends Actor {
             decoded.userId, decoded.questionId)
         } { updateAnswerDownvoted(decoded.answerId,
           decoded.userId) }
-      case _ => Some("Unknown event")
+      case _ => Future.successful(Some("Unknown event"))
     }
   }
 }
@@ -474,6 +504,7 @@ object ValidationActor {
   case class ValidateEventRequest(event: LogRecord)
   case class RefreshStateCommand(events: Seq[LogRecord],
       fromScratch: Boolean = true)
+  case class ProcessEventsCommand(originalSender: ActorRef, resetResult: Option[String], events: Seq[LogRecord])
 
   val name = "validation-actor"
   val path = s"/user/$name"
