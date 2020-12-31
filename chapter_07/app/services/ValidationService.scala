@@ -1,7 +1,7 @@
 package services
 
 import com.appliedscala.events.LogRecord
-import actors.ValidationDao
+import dao.ValidationDao
 
 import scala.concurrent.Future
 

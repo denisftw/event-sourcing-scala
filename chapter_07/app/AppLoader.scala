@@ -6,8 +6,7 @@ import play.api.routing.Router
 import router.Routes
 import com.softwaremill.macwire._
 import _root_.controllers._
-import actors.ValidationDao
-import dao._
+import dao.{ValidationDao, _}
 import play.api.mvc.DefaultControllerComponents
 import scalikejdbc.config.DBs
 import security.{UserAuthAction, UserAwareAction}
