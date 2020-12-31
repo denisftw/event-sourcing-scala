@@ -13,20 +13,20 @@ import scala.concurrent.duration.Duration
 class AuthService(sessionDao: SessionDao, userDao: UserDao,
     userEventProducer: UserEventProducer) {
 
-  val mda = MessageDigest.getInstance("SHA-512")
+  private val MDA = MessageDigest.getInstance("SHA-512")
   val cookieHeader = "X-Auth-Token"
 
   import util.ThreadPools.CPU
   def login(userCode: String, password: String): Future[Cookie] = {
-    val userT = userDao.checkUser(userCode, password)
-    userT.flatMap { user =>
+    val userF = userDao.checkUser(userCode, password)
+    userF.flatMap { user =>
       createCookie(user)
     }
   }
 
   def register(userCode: String, fullName: String, password: String): Future[Cookie] = {
-    val userT = userDao.insertUser(userCode, fullName, password)
-    userT.flatMap { user =>
+    val userF = userDao.insertUser(userCode, fullName, password)
+    userF.flatMap { user =>
       userEventProducer.activateUser(user.userId)
       createCookie(user)
     }
@@ -34,7 +34,7 @@ class AuthService(sessionDao: SessionDao, userDao: UserDao,
 
   def checkCookie(header: RequestHeader): Future[Option[User]] = {
     val maybeCookie = header.cookies.get(cookieHeader)
-    val maybeUserT = maybeCookie match {
+    val maybeUserF = maybeCookie match {
       case Some(cookie) =>
         val maybeUserSessionT = sessionDao.findSession(cookie.value)
         maybeUserSessionT.flatMap {
@@ -43,7 +43,7 @@ class AuthService(sessionDao: SessionDao, userDao: UserDao,
         }
       case None => Future.successful(None)
     }
-    maybeUserT
+    maybeUserF
   }
 
   def destroySession(header: RequestHeader): Future[Unit] = {
@@ -58,12 +58,12 @@ class AuthService(sessionDao: SessionDao, userDao: UserDao,
     val randomPart = UUID.randomUUID().toString.toUpperCase
     val userPart = user.userId.toString.toUpperCase
     val key = s"$randomPart|$userPart"
-    val token = Base64.getEncoder.encodeToString(mda.digest(key.getBytes))
+    val token = Base64.getEncoder.encodeToString(MDA.digest(key.getBytes))
     val duration = Duration.create(10, TimeUnit.HOURS)
 
     val userSession = UserSession.create(user, token, duration.toSeconds)
-    val insertT = sessionDao.insertSession(userSession)
-    insertT.map { insert =>
+    val insertF = sessionDao.insertSession(userSession)
+    insertF.map { _ =>
       Cookie(cookieHeader, token, maxAge = Some(duration.toSeconds.toInt), httpOnly = true)
     }
   }

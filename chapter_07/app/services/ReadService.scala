@@ -14,11 +14,11 @@ class ReadService(neo4JReadDao: Neo4JReadDao, userService: UserService) {
   }
 
   def getAllQuestions: Future[Seq[Question]] = {
-    val namesT = userService.getUserFullNameMap
-    val questionsT = neo4JReadDao.getQuestions
+    val namesF = userService.getUserFullNameMap
+    val questionsF = neo4JReadDao.getQuestions
     for {
-      names <- namesT
-      questions <- questionsT
+      names <- namesF
+      questions <- questionsF
     } yield {
       questions.map { question =>
         question.copy(authorFullName = names.get(question.authorId))
@@ -27,11 +27,11 @@ class ReadService(neo4JReadDao: Neo4JReadDao, userService: UserService) {
   }
 
   def getQuestionThread(questionId: UUID): Future[Option[QuestionThread]] = {
-    val maybeThreadT = neo4JReadDao.getQuestionThread(questionId)
-    val namesT = userService.getUserFullNameMap
+    val maybeThreadF = neo4JReadDao.getQuestionThread(questionId)
+    val namesF = userService.getUserFullNameMap
     for {
-      names <- namesT
-      maybeThread <- maybeThreadT
+      names <- namesF
+      maybeThread <- maybeThreadF
     } yield {
       maybeThread.map { thread =>
         val sourceQuestion = thread.question

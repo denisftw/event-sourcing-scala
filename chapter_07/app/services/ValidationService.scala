@@ -6,7 +6,6 @@ import dao.ValidationDao
 import scala.concurrent.Future
 
 
-
 /**
   * Created by denis on 12/6/16.
   */

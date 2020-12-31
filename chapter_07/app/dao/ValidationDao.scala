@@ -34,13 +34,13 @@ class ValidationDao(implicit mat: Materializer) {
   import util.ThreadPools.IO
   private def validateTagCreated(tagText: String, userId: UUID): Future[Option[String]] = {
     validateUser(userId) {
-      val maybeExistingT = Future {
+      val maybeExistingF = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
           sql"select tag_id from tags where tag_text = $tagText".
             map(_.string("tag_id")).headOption().apply()
         }
       }
-      maybeExistingT.transform {
+      maybeExistingF.transform {
         case Success(Some(_)) => Success(Some("The tag already exists!"))
         case Success(None) => Success(None)
         case _ => Success(Some("Validation state exception!"))
@@ -86,8 +86,7 @@ class ValidationDao(implicit mat: Materializer) {
   }
 
   private def validateUserActivated(userId: UUID): Future[Option[String]] = {
-    val isActivatedT = isActivated(userId)
-    isActivatedT.transform {
+    isActivated(userId).transform {
       case Success(true) => Success(Some("The user is already activated!"))
       case Failure(_) => Success(Some("Validation state exception"))
       case Success(false) => Success(None)
@@ -104,8 +103,7 @@ class ValidationDao(implicit mat: Materializer) {
   }
 
   private def validateUser(userId: UUID)(block: => Future[Option[String]]): Future[Option[String]] = {
-    val isActivatedT = isActivated(userId)
-    isActivatedT.transformWith {
+    isActivated(userId).transformWith {
       case Success(false) => Future.successful(Some("The user is not activated!"))
       case Failure(_) => Future.successful(Some("Validation state exception!"))
       case Success(true) => block
@@ -122,8 +120,7 @@ class ValidationDao(implicit mat: Materializer) {
   }
 
   private def validateUserDeactivated(userId: UUID): Future[Option[String]] = {
-    val isActivatedT = isActivated(userId)
-    isActivatedT.transform {
+    isActivated(userId).transform {
       case Success(true) => Success(None)
       case Failure(_) => Success(Some("Validation state exception"))
       case Success(false) => Success(Some("The user is already deactivated!"))
@@ -142,13 +139,13 @@ class ValidationDao(implicit mat: Materializer) {
   private def validateQuestionDeleted(questionId: UUID, userId: UUID):
   Future[Option[String]] = {
     validateUser(userId) {
-      val maybeQuestionOwnerT = Future {
+      val maybeQuestionOwnerF = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
           sql"select user_id from question_user where question_id = $questionId".
             map(_.string("user_id")).headOption().apply()
         }
       }
-      maybeQuestionOwnerT.transform {
+      maybeQuestionOwnerF.transform {
         case Success(None) => Success(Some("The question doesn't exist!"))
         case Success(Some(questionOwner)) =>
           if (questionOwner != userId.toString) {
@@ -171,7 +168,7 @@ class ValidationDao(implicit mat: Materializer) {
 
   private def validateQuestionCreated(questionId: UUID, userId: UUID, tags: Seq[UUID]): Future[Option[String]] = {
     validateUser(userId) {
-      val existingTagsT = Future {
+      val existingTagsF = Future {
         NamedDB(Symbol("validation")).localTx { implicit session =>
           implicit val binderFactory: ParameterBinderFactory[UUID] = ParameterBinderFactory {
             value => (stmt, idx) => stmt.setObject(idx, value)
@@ -180,7 +177,7 @@ class ValidationDao(implicit mat: Materializer) {
           sql"select * from tags where $tagIdsSql".map(_.string("tag_id")).list().apply().length
         }
       }
-      existingTagsT.transform {
+      existingTagsF.transform {
         case Failure(th) => Success(Some("Validation state exception!"))
         case Success(num) if num == tags.length => Success(None)
         case _ => Success(Some("Some tags referenced by the question do not exist!"))
@@ -203,7 +200,7 @@ class ValidationDao(implicit mat: Materializer) {
   private def validateAnswerCreated(answerId: UUID, userId: UUID,
       questionId: UUID): Future[Option[String]] = {
     validateUser(userId) {
-      val resultT = Future {
+      val resultF = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
           val questionExists =
             sql"select * from question_user where question_id = ${questionId}".
@@ -220,7 +217,7 @@ class ValidationDao(implicit mat: Materializer) {
         }
       }
 
-      resultT.transform {
+      resultF.transform {
         case Success((false, _, _)) => Success(Some("This question doesn't exist!"))
         case Success((_, _, true)) =>
           Success(Some("Users can only give one answer to the question!"))
@@ -234,13 +231,13 @@ class ValidationDao(implicit mat: Materializer) {
   private def validateAnswerDeleted(answerId: UUID, userId: UUID): Future[Option[String]] = {
     validateUser(userId) {
       val UserIdStr = userId.toString
-      val maybeAnswerOwnerT = Future {
+      val maybeAnswerOwnerF = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
           sql"select user_id from answer_user where answer_id = ${answerId}".
             map(_.string("user_id")).headOption().apply()
         }
       }
-      maybeAnswerOwnerT.transform {
+      maybeAnswerOwnerF.transform {
         case Success(None) => Success(Some("The answer doesn't exists"))
         case Success(Some(UserIdStr)) => Success(None)
         case Success(Some(_)) => Success(Some("The answer was written by another user!"))
@@ -259,13 +256,13 @@ class ValidationDao(implicit mat: Materializer) {
 
   private def validateAnswerUpdated(answerId: UUID, userId: UUID, questionId: UUID): Future[Option[String]] = {
     val UserIdStr = userId.toString
-    val maybeAnswerOwnerT = Future {
+    val maybeAnswerOwnerF = Future {
       NamedDB(Symbol("validation")).readOnly { implicit session =>
         sql"select user_id from answer_user where answer_id = ${answerId}".
           map(_.string("user_id")).headOption().apply()
       }
     }
-    maybeAnswerOwnerT.transform {
+    maybeAnswerOwnerF.transform {
       case Success(None) => Success(Some("The answer doesn't exists"))
       case Success(Some(UserIdStr)) => Success(None)
       case Success(Some(_)) => Success(Some("The answer was written by another user!"))
@@ -277,7 +274,7 @@ class ValidationDao(implicit mat: Materializer) {
 
   private def validateAnswerUpvoted(answerId: UUID, userId: UUID, questionId: UUID): Future[Option[String]] = {
     val UserIdStr = userId.toString
-    val resultT = Future {
+    val resultF = Future {
       NamedDB(Symbol("validation")).readOnly { implicit session =>
         val questionExists =
           sql"select * from question_user where question_id = ${questionId}".
@@ -291,7 +288,7 @@ class ValidationDao(implicit mat: Materializer) {
         (questionExists, answerAuthor, alreadyUpvoted)
       }
     }
-    resultT.transform {
+    resultF.transform {
       case Success((false, _, _)) => Success(Some("This question doesn't exist!"))
       case Success((_, None, _)) => Success(Some("This answer doesn't exist!"))
       case Success((_, Some(UserIdStr), _)) => Success(Some("Users cannot like their own answers!"))
@@ -310,7 +307,7 @@ class ValidationDao(implicit mat: Materializer) {
   }
 
   private def validateAnswerDownvoted(answerId: UUID, userId: UUID, questionId: UUID): Future[Option[String]] = {
-    val resultT = Future {
+    val resultF = Future {
       NamedDB(Symbol("validation")).readOnly { implicit session =>
         val questionExists =
           sql"select * from question_user where question_id = ${questionId}".
@@ -321,7 +318,7 @@ class ValidationDao(implicit mat: Materializer) {
         (questionExists, alreadyUpvoted)
       }
     }
-    resultT.transform {
+    resultF.transform {
       case Success((false, _)) => Success(Some("This question doesn't exist!"))
       case Success((_, true)) => Success(None)
       case Success((_, false)) => Success(Some("Users cannot downvote what they haven't upvoted"))
@@ -396,7 +393,7 @@ class ValidationDao(implicit mat: Materializer) {
     result
   }
 
-  // Not used
+  // Not used - example only
   private def processEventsNonTailRec(events: Seq[LogRecord], skipValidation: Boolean): Future[Option[String]] = {
     def processEventsRec(xs: List[LogRecord], previous: Future[Option[String]]): Future[Option[String]] = {
       xs match {

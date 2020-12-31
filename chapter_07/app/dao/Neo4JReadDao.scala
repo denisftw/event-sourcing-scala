@@ -105,8 +105,8 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     val query =
       """MATCH (t: Tag) RETURN t.tagId as tagId,
        t.tagText as tagText ORDER BY tagText"""
-    val recordsT = queryExecutor.executeQuery(Neo4JQuery.simple(query))
-    recordsT.map { records =>
+    val recordsF = queryExecutor.executeQuery(Neo4JQuery.simple(query))
+    recordsF.map { records =>
       records.map { record =>
         val id = record.get("tagId").asString()
         val text = record.get("tagText").asString()
@@ -120,12 +120,12 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
          {id: $questionId })-[:BELONGS]->(t: Tag)
          RETURN q.title as title, q.details as details, q.id as question_id,
          q.created as created, u.id as user_id, collect(distinct t) as tags"""
-    val questionRecordsT = queryExecutor.executeQuery(Neo4JQuery(queryQuestion,
+    val questionRecordsF = queryExecutor.executeQuery(Neo4JQuery(queryQuestion,
       Map("questionId" -> questionId.toString)))
-    val questionT = questionRecordsT.map { records =>
+    val questionF = questionRecordsF.map { records =>
       records.headOption.map(recordToQuestion)
     }
-    questionT
+    questionF
   }
 
   def getQuestionThread(questionId: UUID): Future[Option[QuestionThread]] = {
@@ -144,12 +144,12 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
          RETURN collect(distinct u.id) as upvotes,
          a.answerText as answerText, a.id as id, 
          a.authorId as authorId, a.updated as updated"""
-    val answerRecordsT = queryExecutor.executeQuery(Neo4JQuery(queryAnswer,
+    val answerRecordsF = queryExecutor.executeQuery(Neo4JQuery(queryAnswer,
       Map("questionId" -> questionId.toString)))
-    val answersT = answerRecordsT.map { records =>
+    val answersF = answerRecordsF.map { records =>
       records.map { record => recordToAnswer(questionId, record) }
     }
-    answersT
+    answersF
   }
 
   private def recordToAnswer(questionId: UUID, record: Record): Answer = {
@@ -193,8 +193,8 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
          MATCH (u:User)-[:WROTE]->(q:Question)-[:BELONGS]->(t: Tag)
          RETURN q.title as title, q.details as details, q.id as question_id,
          q.created as created, u.id as user_id, collect(t) as tags"""
-    val recordsT = queryExecutor.executeQuery(Neo4JQuery.simple(query))
-    val result = recordsT.map { records =>
+    val recordsF = queryExecutor.executeQuery(Neo4JQuery.simple(query))
+    val result = recordsF.map { records =>
       records.map(recordToQuestion)
     }
     result

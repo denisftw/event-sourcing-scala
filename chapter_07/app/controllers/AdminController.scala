@@ -36,10 +36,6 @@ class AdminController(components: ControllerComponents, userAuthAction: UserAuth
         data => {
           rewindService.refreshState(data.destination).map { _ =>
             Ok
-          }.recover { case th =>
-            // TODO: [LOGBACK-1027]
-            log.error("Error occurred while rewinding the events", th)
-            InternalServerError(views.html.errorPage())
           }
         }
       )
