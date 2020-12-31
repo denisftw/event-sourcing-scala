@@ -6,6 +6,7 @@ import play.api.routing.Router
 import router.Routes
 import com.softwaremill.macwire._
 import _root_.controllers._
+import actors.ValidationDao
 import dao._
 import play.api.mvc.DefaultControllerComponents
 import scalikejdbc.config.DBs
@@ -65,6 +66,7 @@ class AppComponents(context: Context) extends BuiltInComponentsFromContext(conte
   lazy val userDao = wire[UserDao]
   lazy val neo4JReadDao = wire[Neo4JReadDao]
   lazy val neo4JQueryExecutor = wire[Neo4JQueryExecutor]
+  lazy val validationDao = wire[ValidationDao]
 
   lazy val eventValidator = wire[EventValidator]
   lazy val validationService = wire[ValidationService]

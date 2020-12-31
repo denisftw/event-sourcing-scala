@@ -1,8 +1,6 @@
 package actors
 
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.pattern.pipe
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.appliedscala.events.LogRecord
@@ -12,6 +10,7 @@ import com.appliedscala.events.answer._
 import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
+import play.api.Logger
 import scalikejdbc._
 
 import scala.concurrent.Future
@@ -20,30 +19,20 @@ import scala.util.{Failure, Success}
 /**
   * Created by denis on 12/5/16.
   */
-class ValidationActor extends Actor with ActorLogging {
-  import ValidationActor._
+class ValidationDao(implicit mat: Materializer) {
+  private val log = Logger(this.getClass)
   import util.ThreadPools.CPU
-  override def receive: Receive = {
-    case ValidateEventRequest(event) =>
-      pipe(processSingleEvent(event, skipValidation = false)).to(sender())
-    case RefreshStateCommand(events, fromScratch) =>
-      val originalSender = sender()
-      pipe(resetState(fromScratch).map { resetResult =>
-        ProcessEventsCommand(originalSender, resetResult, events)
-      }).to(self)
-    case ProcessEventsCommand(originalSender, resetResult, events) =>
-      (resetResult match {
-        case Some(value) => Future.successful(Some(value))
-        case None => processEvents(events, skipValidation = true)
-      }).andThen {
-        case Failure(exception) => originalSender ! Some(exception.getMessage)
-        case Success(value) => originalSender ! value
-      }
-    case _ => sender() ! Some("Unknown message type!")
+  def validateSingle(event: LogRecord): Future[Option[String]] = {
+    processSingleEvent(event, skipValidation = false)
+  }
+  def refreshState(events: Seq[LogRecord], fromScratch: Boolean): Future[Option[String]] = {
+    resetState(fromScratch).flatMap {
+      case Some(value) => Future.successful(Some(value))
+      case None => processEvents(events, skipValidation = true)
+    }
   }
 
   import util.ThreadPools.IO
-
   private def validateTagCreated(tagText: String, userId: UUID): Future[Option[String]] = {
     validateUser(userId) {
       val maybeExistingT = Future {
@@ -397,7 +386,6 @@ class ValidationActor extends Actor with ActorLogging {
     }
   }
 
-  implicit val mat = Materializer(context)
   private def processEvents(events: Seq[LogRecord], skipValidation: Boolean): Future[Option[String]] = {
     log.info(s"Processing ${events.size} events, skip validation: $skipValidation")
     val result = Source.apply(events).foldAsync(Option.empty[String]) { (previousResult, nextEvent) =>
@@ -498,15 +486,4 @@ class ValidationActor extends Actor with ActorLogging {
       case _ => Future.successful(Some("Unknown event"))
     }
   }
-}
-
-object ValidationActor {
-  case class ValidateEventRequest(event: LogRecord)
-  case class RefreshStateCommand(events: Seq[LogRecord],
-      fromScratch: Boolean = true)
-  case class ProcessEventsCommand(originalSender: ActorRef, resetResult: Option[String], events: Seq[LogRecord])
-
-  val name = "validation-actor"
-  val path = s"/user/$name"
-  def props() = Props(new ValidationActor)
 }
