@@ -2,6 +2,8 @@ package controllers
 
 import controllers.Assets.Asset
 import model._
+import play.api.http.ContentTypes
+import play.api.libs.EventSource
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import security.{UserAuthAction, UserAwareAction, UserAwareRequest}
@@ -32,7 +34,8 @@ class MainController(components: ControllerComponents, assets: Assets,
   }
 
   def serverEventStream() = userAwareAction { request =>
-    ???
+    val source = clientBroadcastService.createEventStream(request.user.map(_.userId))
+    Ok.chunked(source.via(EventSource.flow)).as(ContentTypes.EVENT_STREAM)
   }
 
   def wsStream() = WebSocket.acceptOrResult[JsValue, JsValue] { request =>

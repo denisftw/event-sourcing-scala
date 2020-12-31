@@ -1,9 +1,9 @@
 package services
 
-import actors.QuestionThreadIdChanged
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import io.reactivex.rxjava3.processors.PublishProcessor
+import model.QuestionThreadIdChanged
 import org.reactivestreams.Subscriber
 import play.api.libs.json.{JsObject, JsString, JsValue}
 
@@ -15,18 +15,32 @@ class ClientBroadcastService {
   import util.ThreadPools.CPU
 
   def registerClient(userId: Option[UUID]): Flow[JsValue, JsValue, NotUsed] = {
-    val subject = PublishProcessor.create[JsValue]()
+    val publisher = PublishProcessor.create[JsValue]()
     val clientId = UUID.randomUUID()
-    val toClient = Source.fromPublisher(subject).
+    val toClient = Source.fromPublisher(publisher).
       watchTermination() { (_, done) =>
         done.andThen { case _ =>
           removeDisconnectedClient(clientId)
         }
     }
-    val client = ConnectedClient(userId, None, subject)
+    val client = ConnectedClient(userId, None, publisher)
     addConnectedClient(clientId, client)
     val fromClient = Sink.foreach[JsValue](clientMessageReceived(clientId))
     Flow.fromSinkAndSource(fromClient, toClient)
+  }
+
+  def createEventStream(userId: Option[UUID]): Source[JsValue, Future[Done]] = {
+    val publisher = PublishProcessor.create[JsValue]()
+    val clientId = UUID.randomUUID()
+    val toClient = Source.fromPublisher(publisher).
+      watchTermination() { (_, done) =>
+        done.andThen { case _ =>
+          removeDisconnectedClient(clientId)
+        }
+      }
+    val client = ConnectedClient(userId, None, publisher)
+    addConnectedClient(clientId, client)
+    toClient
   }
 
   def broadcastUpdate(data: JsValue): Future[Unit] = Future {
@@ -76,6 +90,7 @@ class ClientBroadcastService {
 
   case class ConnectedClient(userId: Option[UUID], questionThreadId: Option[UUID],
                              out: Subscriber[JsValue])
+
 }
 
 
