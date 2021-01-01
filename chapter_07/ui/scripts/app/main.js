@@ -1,5 +1,5 @@
-import AppComponent from './app-component.jsx';
-import AdminComponent from './admin-component.jsx';
+import AppComponent from './AppComponent.jsx';
+import AdminComponent from './AdminComponent.jsx';
 
 const appComponent = new AppComponent();
 appComponent.init();

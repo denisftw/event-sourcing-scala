@@ -21,27 +21,26 @@ class EditAnswerForm extends React.Component {
   };
   saveEntity = () => {
     const payload = {
-      "questionId": this.props.questionId,
-      "answerText" : this.state.answerText
+      'questionId': this.props.questionId,
+      'answerText' : this.state.answerText
     };
-    console.log('payload: ', payload);
     if (this.props.maybeAnswer != null) {
       payload['answerId'] = this.props['maybeAnswer'].answerId;
-      axios.post("/api/updateAnswer", payload).
+      axios.post('/api/updateAnswer', payload).
       then(this.afterAnswerUpdated);
     } else {
-      axios.post("/api/createAnswer", payload).
+      axios.post('/api/createAnswer', payload).
       then(this.afterAnswerUpdated);
     }
   };
   afterAnswerUpdated = (res) => {
-    if (res.status == 200) {
+    if (res.status === 200) {
       this.resetState();
       this.props.onAnswerUpdated();
     }
   };
   render = () => {
-    const addButtonDisabled = this.state.answerText.length == 0;
+    const addButtonDisabled = this.state.answerText.length === 0;
     const saveAnswerButtonText = this.props.maybeAnswer != null ?
       'Update answer' : 'Create answer';
     return <div className="answer-edit-form">

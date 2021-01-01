@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import NotificationService from '../util/notification-service.js';
+import NotificationService from '../util/NotificationService.js';
 import DateTime from 'react-datetime';
 import moment from 'moment';
 
@@ -10,7 +10,7 @@ class TimeTravelDashboard extends React.Component {
     this.state = {
       destination: new Date()
     };
-  };
+  }
   rewind = () => {
     const destination = this.state.destination;
     const destFmt = moment(destination).format();
@@ -30,7 +30,7 @@ class TimeTravelDashboard extends React.Component {
   render = () => {
     return <div className="time-travel-dashboard">
       <div className="time-travel-dashboard__prompt">
-        Select the destination date in the field below and click "Rewind".
+        Select the destination date in the field below and click &quot;Rewind&quot;.
         The system will be restored up to this point in time.
       </div>
       <div className="time-travel-dashboard__date-selector">

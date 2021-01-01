@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Switch, Route } from 'react-router-dom';
-import QuestionListView from './question-list.jsx';
-import QuestionDetailsView from './question-details.jsx';
+import QuestionListView from './QuestionList.jsx';
+import QuestionDetailsView from './QuestionDetailsView.jsx';
 
 class QuestionComposite extends React.Component {
   render = () => {

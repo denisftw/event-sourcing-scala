@@ -7,7 +7,7 @@ class AskQuestionView extends React.Component {
   constructor(props) {
     super(props);
     this.state = this.getInitState();
-  };
+  }
   getInitState = () => {
     return {
       tags: [],
@@ -36,15 +36,15 @@ class AskQuestionView extends React.Component {
       tags: tagCodes,
       details: this.state.details
     };
-    axios.post("/api/createQuestion", newQuestion).then((res) => {
-      if (res.status == 200) {
+    axios.post('/api/createQuestion', newQuestion).then((res) => {
+      if (res.status === 200) {
         this.setState(this.getInitState());
         this.props.history.push('/questions');
       }
     })
   };
   handleResponse = (response) => {
-    if (response.status == 200) {
+    if (response.status === 200) {
       this.props.dispatch({
         type: 'tags_updated',
         data: response.data
@@ -54,7 +54,7 @@ class AskQuestionView extends React.Component {
     }
   };
   componentDidMount = () => {
-    axios.get("/api/tags").then(this.handleResponse);
+    axios.get('/api/tags').then(this.handleResponse);
   };
   render = () => {
     const tagOptions = this.props.tags.map((tag) => {
@@ -63,8 +63,8 @@ class AskQuestionView extends React.Component {
         label: tag.text
       };
     });
-    const buttonDisabled = this.state.tags.length == 0 ||
-      this.state.title.length == 0;
+    const buttonDisabled = this.state.tags.length === 0 ||
+      this.state.title.length === 0;
     return <div className="question-view-form">
       <div className="question-view-form__tag-panel">
         <Select className="question-view-form__tag-panel__select"

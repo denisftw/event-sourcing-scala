@@ -2,8 +2,8 @@ import React from 'react';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
-import EditAnswerForm from './edit-answer-form.jsx';
-import ConfirmationService from '../util/confirmation-service.js';
+import EditAnswerForm from './EditAnswerForm.jsx';
+import ConfirmationService from '../util/ConfirmationService.js';
 import moment from 'moment';
 
 class QuestionDetailsView extends React.Component {
@@ -46,7 +46,7 @@ class QuestionDetailsView extends React.Component {
     // Answers
     const answers = this.props.questionThread.answers;
     const answerInd = answers.findIndex((answer) => {
-      return answer.authorId == maybeUserId;
+      return answer.authorId === maybeUserId;
     });
     const answerExists = answerInd != -1;
     const maybeAnswer = answerExists ? answers[answerInd] : null;
@@ -154,26 +154,26 @@ class QuestionDetailsView extends React.Component {
         title: 'Delete answer',
         body: 'Are you sure you want to delete the answer?'
       }, 'warning', () => {
-        axios.post("/api/deleteAnswer", {
-          "answerId" : answerId,
-          "questionId": questionId
+        axios.post('/api/deleteAnswer', {
+          answerId,
+          questionId
         })
       });
     }
   };
   upvoteAnswer = (questionId, answerId) => {
     return () => {
-      axios.post("/api/upvoteAnswer", {
-        "answerId" : answerId,
-        "questionId": questionId
+      axios.post('/api/upvoteAnswer', {
+        answerId,
+        questionId
       })
     }
   };
   downvoteAnswer = (questionId, answerId) => {
     return () => {
-      axios.post("/api/downvoteAnswer", {
-        "answerId" : answerId,
-        "questionId": questionId
+      axios.post('/api/downvoteAnswer', {
+        answerId,
+        questionId
       })
     }
   };

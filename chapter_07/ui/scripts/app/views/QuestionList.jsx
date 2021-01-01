@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
-import ConfirmationService from '../util/confirmation-service.js';
+import ConfirmationService from '../util/ConfirmationService.js';
 import { Link } from 'react-router-dom';
 
 

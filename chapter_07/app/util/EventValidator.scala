@@ -1,7 +1,6 @@
 package util
 
 import java.util.UUID
-import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
 import services.{ClientBroadcastService, ValidationService}
 
@@ -12,7 +11,7 @@ import scala.concurrent.Future
   * Created by denis on 12/12/16.
   */
 class EventValidator(validationService: ValidationService,
-    actorSystem: ActorSystem, clientBroadcastService: ClientBroadcastService) {
+    clientBroadcastService: ClientBroadcastService) {
 
   def validateAndSend(userId: UUID, event: LogRecord,
       messageProducer: IMessageProducer): Future[Option[String]] = {

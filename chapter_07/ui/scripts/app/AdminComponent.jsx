@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import TimeTravelDashboard from './views/time-travel-dashboard.jsx'
+import TimeTravelDashboard from './views/TimeTravelDashboard.jsx'
 
 class AdminComponent {
   init = () => {
     const reactDiv = document.getElementById('adminReactDiv');
-    if (!!reactDiv) {
+    if (reactDiv !== null) {
       this.renderComponent(reactDiv);
     }
   };
