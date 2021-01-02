@@ -37,7 +37,7 @@ class QuestionList extends React.Component {
                       className="question-list__one-question">
             <div className="question-list__one-question__tags">
               {question.tags.map((tag) => {
-                return <span className="label label-default" key={tag.id}>{tag.text}</span>
+                return <span className="badge badge-primary" key={tag.id}>{tag.text}</span>
               })}
             </div>
             <div className="question-list__one-question__title">

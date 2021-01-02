@@ -23,7 +23,9 @@ class AppComponent {
     }
   };
   connectToWSEndpoint = () => {
-    this.streamWS = new WebSocket("ws://localhost:9000/api/wsStream");
+    const loc = window.location;
+    const protocol = (loc.protocol === "https:") ? "wss:" : "ws:";
+    this.streamWS = new WebSocket(`${protocol}//${loc.host}/api/wsStream`);
     this.streamWS.onmessage = this.onServerSideEvent;
   };
   connectToSSEEndpoint = () => {
@@ -135,6 +137,7 @@ class AppComponent {
               <Switch>
                 <Route path="/tags" component={TagManager} />
                 <Route path="/ask" component={AskQuestionView}  />
+                <Route path="/questions/:questionId" component={QuestionComposite} />
                 <Route path="/questions" component={QuestionComposite} />
                 <Redirect path="/" to="/ask" />
               </Switch>

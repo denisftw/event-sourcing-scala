@@ -41,11 +41,12 @@
   },
   "dependencies": {
     "axios": "^0.21.0",
+    "bootstrap-scss": "^4.5.3",
     "event-source-polyfill": "^1.0.22",
     "moment": "^2.29.0",
     "react": "^17.0.1",
-    "react-dom": "^17.0.1",
     "react-datetime": "^3.0.4",
+    "react-dom": "^17.0.1",
     "react-modal": "^3.12.1",
     "react-redux": "^7.2.2",
     "react-router-dom": "^5.2.0",

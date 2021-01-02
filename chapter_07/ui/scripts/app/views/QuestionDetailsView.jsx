@@ -1,7 +1,6 @@
 import React from 'react';
 import axios from 'axios';
 import { connect } from 'react-redux';
-import Modal from 'react-modal';
 import EditAnswerForm from './EditAnswerForm.jsx';
 import ConfirmationService from '../util/ConfirmationService.js';
 import moment from 'moment';
@@ -9,9 +8,7 @@ import moment from 'moment';
 class QuestionDetailsView extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      editAnswerIsOpen: false
-    }
+    this.answerModalRef = React.createRef();
   }
   componentDidMount = () => {
     const questionId = this.props.match.params['questionId'];
@@ -35,7 +32,6 @@ class QuestionDetailsView extends React.Component {
       </div>
     }
     const question = this.props.questionThread.question;
-    console.log('questionThread', this.props.questionThread);
 
     // User
     const userIdHolder = document.getElementById('data-user-id-holder');
@@ -52,20 +48,11 @@ class QuestionDetailsView extends React.Component {
     const maybeAnswer = answerExists ? answers[answerInd] : null;
     const editAnswerText = answerExists ? 'Edit answer' : 'Add answer';
 
-    const answerEditStyle = {
-      content: {
-        maxWidth: "600px",
-        margin: "0 auto",
-        height: "400px",
-        position: "relative"
-      }
-    };
-
     return <div className="question-thread-view-form">
       <div className="question-thread-view-form__body">
         <div className="question-thread-view-form__tags">
           {question.tags.map((tag) => {
-            return <span className="label label-default" key={tag.id}>{tag.text}</span>
+            return <span className="badge badge-primary" key={tag.id}>{tag.text}</span>
           })}
         </div>
         <div className="question-thread-view-form__title">
@@ -75,7 +62,7 @@ class QuestionDetailsView extends React.Component {
           {question.details}
         </div>
         <div className="question-thread-view-form__controls">
-          <button className="btn btn-default save-button"
+          <button className="btn btn-outline-primary"
                   disabled={userNotLoggedIn}
                   onClick={this.openEditAnswerForm}
                   type="button">{editAnswerText}</button>
@@ -92,10 +79,10 @@ class QuestionDetailsView extends React.Component {
           const alreadyUpvoted = !!maybeUserId && upvotes.findIndex((id) => {
               return id == maybeUserId; }) != -1;
           const upvoteButton = alreadyUpvoted ?
-            <button type="button" className="btn btn-default"
+            <button type="button" className="btn btn-outline-secondary"
                 onClick={this.downvoteAnswer(question.id, answer.answerId)}
                 disabled={upvoteButtonDisabled}>Downvote</button> :
-            <button type="button"  className="btn btn-default"
+            <button type="button"  className="btn btn-outline-secondary"
                 onClick={this.upvoteAnswer(question.id, answer.answerId)}
                 disabled={upvoteButtonDisabled}>Upvote</button>;
           const authorName = answer.authorFullName;
@@ -111,15 +98,15 @@ class QuestionDetailsView extends React.Component {
             </div>
             <div className="question-thread-view-form__answer-one__button">
               <div className="button-container">
-                <div className="btn-group btn-group-xs" role="group">
+                <div className="btn-group btn-group-sm" role="group">
                   {upvoteButton}
                   <button type="button" disabled="disabled"
-                          className="btn btn-default button-stat-indicator">
+                          className="btn btn-secondary button-stat-indicator">
                     {upvotes.length}</button>
                 </div>
               </div>
               <div className="button-container">
-                <button className="btn btn-default btn-xs"
+                <button className="btn btn-outline-danger btn-sm"
                         onClick={this.deleteAnswer(question.id, answer.answerId)}
                         disabled={deleteButtonDisabled}>Delete
                 </button>
@@ -128,25 +115,13 @@ class QuestionDetailsView extends React.Component {
           </div>
         })}
       </div>
-      <Modal
-        isOpen={this.state.editAnswerIsOpen}
-        onRequestClose={this.closeEditAnswerForm}
-        style={answerEditStyle}
-        contentLabel="Edit answer">
-        <EditAnswerForm maybeAnswer={maybeAnswer} questionId={question.id}
-             onAnswerUpdated={this.closeEditAnswerForm}/>
-      </Modal>
+      <EditAnswerForm ref={this.answerModalRef} maybeAnswer={maybeAnswer} questionId={question.id} />
     </div>
   };
   openEditAnswerForm = () => {
-    this.setState({
-      editAnswerIsOpen: true
-    })
-  };
-  closeEditAnswerForm = () => {
-    this.setState({
-      editAnswerIsOpen: false
-    })
+    if (this.answerModalRef) {
+      this.answerModalRef.current.openForm();
+    }
   };
   deleteAnswer = (questionId, answerId) => {
     return () => {

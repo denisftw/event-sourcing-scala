@@ -1,23 +1,47 @@
 import React from 'react';
 import axios from 'axios';
+import Modal from 'react-modal';
 
+
+const answerEditStyle = {
+  content: {
+    maxWidth: "600px",
+    margin: "0 auto",
+    // height: "400px",
+    position: "relative"
+  }
+};
 
 class EditAnswerForm extends React.Component {
   constructor(props) {
     super(props);
-    this.resetState();
+    this.state = {
+      isOpen: false,
+      answerText: '',
+    }
   }
   resetState = () => {
     const text = this.props.maybeAnswer != null ?
       this.props.maybeAnswer.answerText : '';
-    this.state = {
+    this.setState({
       answerText: text
-    }
+    });
   };
   handleChange = (e) => {
     this.setState({
       answerText: e.target.value
     });
+  };
+  openForm = () => {
+    this.resetState();
+    this.setState({
+      isOpen: true
+    })
+  };
+  closeForm = () => {
+    this.setState({
+      isOpen: false
+    })
   };
   saveEntity = () => {
     const payload = {
@@ -36,28 +60,34 @@ class EditAnswerForm extends React.Component {
   afterAnswerUpdated = (res) => {
     if (res.status === 200) {
       this.resetState();
-      this.props.onAnswerUpdated();
+      this.closeForm();
     }
   };
   render = () => {
     const addButtonDisabled = this.state.answerText.length === 0;
     const saveAnswerButtonText = this.props.maybeAnswer != null ?
       'Update answer' : 'Create answer';
-    return <div className="answer-edit-form">
-      <h2>{saveAnswerButtonText}</h2>
-      <div className="form-group">
-        <textarea rows="10" name="text" onChange={this.handleChange}
-                  placeholder="Enter text of your answer here"
-                  value={this.state.answerText} className="form-control" />
+    return <Modal
+      isOpen={this.state.isOpen}
+      onRequestClose={this.closeForm}
+      style={answerEditStyle}
+      contentLabel="Edit answer">
+      <div className="answer-edit-form">
+        <h2>{saveAnswerButtonText}</h2>
+        <div className="form-group">
+          <textarea rows="10" name="text" onChange={this.handleChange}
+                    placeholder="Enter text of your answer here"
+                    value={this.state.answerText} className="form-control" />
+        </div>
+        <hr />
+        <div className="form-group answer-edit-form__button-container">
+          <button disabled={addButtonDisabled}
+                  className="btn btn-primary save-button"
+                  onClick={this.saveEntity}
+                  type="button">{saveAnswerButtonText}</button>
+        </div>
       </div>
-      <hr />
-      <div className="form-group answer-edit-form__button-container">
-        <button disabled={addButtonDisabled}
-                className="btn btn-primary save-button"
-                onClick={this.saveEntity}
-                type="button">{saveAnswerButtonText}</button>
-      </div>
-    </div>
+    </Modal>;
   }
 }
 

@@ -1,14 +1,18 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import Modal from 'react-modal';
 
 class NavigationBar extends React.Component {
+  componentDidMount = () => {
+    Modal.setAppElement('body');
+  }
   render = () => {
     return <div className="view-home-composite__side-menu-panel">
-      <ul id="sideMenu" className="nav nav-stacked">
-        <li><NavLink to="/tags">Tags</NavLink></li>
-        <li><NavLink to="/ask">Ask</NavLink></li>
-        <li><NavLink to="/questions">Questions</NavLink></li>
-      </ul>
+      <div className="nav flex-column nav-pills">
+        <NavLink className="nav-link" activeClassName="active" to="/tags">Tags</NavLink>
+        <NavLink className="nav-link" activeClassName="active" to="/ask">Ask</NavLink>
+        <NavLink className="nav-link" activeClassName="active" to="/questions">Questions</NavLink>
+      </div>
     </div>;
   }
 }

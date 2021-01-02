@@ -1,4 +1,7 @@
-@import 'vendor/bootstrap/bootstrap';
+$primary: darken(#428bca, 6.5%);
+
+@import 'bootstrap-scss/bootstrap';
+
 @import 'vendor/toastr';
 @import 'vendor/react-datetime.scss';
 
@@ -10,6 +13,6 @@
 @import 'app/tag-manager';
 @import 'app/question-view';
 @import 'app/question-thread-view';
-@import 'app/question-list-composite';
+@import 'app/question-list-composite'; 
 @import 'app/question-list';
 @import 'app/time-travel-dashboard';
