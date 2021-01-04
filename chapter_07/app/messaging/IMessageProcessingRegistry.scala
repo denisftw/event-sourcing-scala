@@ -1,4 +1,4 @@
-package util
+package messaging
 
 trait IMessageProcessingRegistry {
   def shutdown(): Unit

@@ -12,7 +12,6 @@ import play.api.libs.json.Json
 import scalikejdbc._
 
 import scala.concurrent.Future
-import scala.util.Try
 
 /**
   * Created by denis on 11/27/16.

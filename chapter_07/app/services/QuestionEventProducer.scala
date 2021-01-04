@@ -3,9 +3,10 @@ package services
 import java.util.UUID
 import com.appliedscala.events.LogRecord
 import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
+import messaging.IMessageProcessingRegistry
 
 import java.time.ZonedDateTime
-import util.{EventValidator, IMessageProcessingRegistry}
+import util.EventValidator
 
 import scala.concurrent.Future
 

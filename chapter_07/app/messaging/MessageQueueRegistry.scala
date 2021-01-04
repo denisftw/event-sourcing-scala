@@ -1,4 +1,4 @@
-package util
+package messaging
 
 import com.rabbitmq.client.{BuiltinExchangeType, CancelCallback, ConnectionFactory, DeliverCallback}
 import play.api.{Configuration, Logger}

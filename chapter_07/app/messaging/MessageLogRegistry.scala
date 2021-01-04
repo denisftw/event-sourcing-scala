@@ -1,9 +1,9 @@
-package util
+package messaging
 
 import akka.actor.ActorSystem
+import akka.kafka.scaladsl.Consumer
 import akka.kafka.scaladsl.Consumer.DrainingControl
 import akka.kafka.{ConsumerSettings, ProducerSettings, Subscriptions}
-import akka.kafka.scaladsl.Consumer
 import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import org.apache.kafka.clients.consumer.ConsumerConfig

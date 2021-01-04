@@ -3,7 +3,8 @@ package services
 import java.util.UUID
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.LogRecord
-import util.{EventValidator, IMessageProcessingRegistry}
+import messaging.IMessageProcessingRegistry
+import util.EventValidator
 
 import scala.concurrent.Future
 

@@ -2,7 +2,7 @@ package services
 
 import com.appliedscala.events.LogRecord
 import dao.LogDao
-import util.{IMessageConsumer, IMessageProcessingRegistry}
+import messaging.{IMessageConsumer, IMessageProcessingRegistry}
 
 /**
   * Created by denis on 12/4/16.

@@ -2,8 +2,8 @@ package services
 
 import com.appliedscala.events.LogRecord
 import dao.Neo4JReadDao
+import messaging.{IMessageConsumer, IMessageProcessingRegistry}
 import play.api.Logger
-import util.{IMessageConsumer, IMessageProcessingRegistry}
 
 import scala.concurrent.Future
 

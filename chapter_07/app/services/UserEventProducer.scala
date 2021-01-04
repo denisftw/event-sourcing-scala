@@ -3,7 +3,8 @@ package services
 import java.util.UUID
 import com.appliedscala.events.LogRecord
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
-import util.{EventValidator, IMessageProcessingRegistry}
+import messaging.IMessageProcessingRegistry
+import util.EventValidator
 
 import scala.concurrent.Future
 

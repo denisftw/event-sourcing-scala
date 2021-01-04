@@ -3,9 +3,9 @@ package services
 import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
 import dao.Neo4JReadDao
+import messaging.{IMessageConsumer, IMessageProcessingRegistry}
 import model.ServerSentMessage
 import play.api.Logger
-import util.{IMessageConsumer, IMessageProcessingRegistry}
 
 import scala.concurrent.Future
 

@@ -2,6 +2,7 @@ package util
 
 import java.util.UUID
 import com.appliedscala.events.LogRecord
+import messaging.IMessageProducer
 import services.{ClientBroadcastService, ValidationService}
 
 import scala.concurrent.ExecutionContext.Implicits.global

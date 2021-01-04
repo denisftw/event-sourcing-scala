@@ -7,11 +7,12 @@ import router.Routes
 import com.softwaremill.macwire._
 import _root_.controllers._
 import dao.{ValidationDao, _}
+import messaging.MessageLogRegistry
 import play.api.mvc.DefaultControllerComponents
 import scalikejdbc.config.DBs
 import security.{UserAuthAction, UserAwareAction}
 import services.{ClientBroadcastService, _}
-import util.{EventValidator, MessageLogRegistry, MessageQueueRegistry}
+import util.EventValidator
 
 import scala.concurrent.Future
 
