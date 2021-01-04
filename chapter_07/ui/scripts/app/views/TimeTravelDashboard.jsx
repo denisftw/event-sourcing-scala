@@ -14,10 +14,10 @@ class TimeTravelDashboard extends React.Component {
   rewind = () => {
     const destination = this.state.destination;
     const destFmt = moment(destination).format();
-    axios.post("/api/rewind", { "destination" : destFmt }).then(() => {
+    axios.post('/api/rewind', { 'destination' : destFmt }).then(() => {
       NotificationService.showMessage({
-        messageType: "info",
-        messageText: "The system was rebuilt up to the specified point"
+        messageType: 'info',
+        messageText: 'The system was rebuilt up to the specified point'
       })
     })
   };

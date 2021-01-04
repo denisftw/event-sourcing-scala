@@ -24,13 +24,13 @@ class AppComponent {
   };
   connectToWSEndpoint = () => {
     const loc = window.location;
-    const protocol = (loc.protocol === "https:") ? "wss:" : "ws:";
+    const protocol = (loc.protocol === 'https:') ? 'wss:' : 'ws:';
     this.streamWS = new WebSocket(`${protocol}//${loc.host}/api/wsStream`);
     this.streamWS.onmessage = this.onServerSideEvent;
   };
   connectToSSEEndpoint = () => {
-    this.es = new EventSource("/api/sse");
-    this.es.addEventListener("message", this.onServerSideEvent);
+    this.es = new EventSource('/api/sse');
+    this.es.addEventListener('message', this.onServerSideEvent);
   };
   onServerSideEvent = (event) => {
     if (event.type === 'message') {

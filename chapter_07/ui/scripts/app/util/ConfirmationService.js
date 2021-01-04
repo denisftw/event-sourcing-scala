@@ -6,7 +6,7 @@ export default {
       title: message.title,
       text: message.body,
       icon: confirmationType,
-      buttons: ["Cancel", true],
+      buttons: ['Cancel', true],
     }).then(isConfirm => {
       if (isConfirm) {
         yesCallback();

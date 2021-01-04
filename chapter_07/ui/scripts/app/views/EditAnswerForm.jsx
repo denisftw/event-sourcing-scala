@@ -5,10 +5,9 @@ import Modal from 'react-modal';
 
 const answerEditStyle = {
   content: {
-    maxWidth: "600px",
-    margin: "0 auto",
-    // height: "400px",
-    position: "relative"
+    maxWidth: '600px',
+    margin: '0 auto',
+    position: 'relative'
   }
 };
 
@@ -49,7 +48,7 @@ class EditAnswerForm extends React.Component {
       'answerText' : this.state.answerText
     };
     if (this.props.maybeAnswer != null) {
-      payload['answerId'] = this.props['maybeAnswer'].answerId;
+      payload.answerId = this.props.maybeAnswer.answerId;
       axios.post('/api/updateAnswer', payload).
       then(this.afterAnswerUpdated);
     } else {

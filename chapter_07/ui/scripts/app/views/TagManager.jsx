@@ -15,7 +15,7 @@ class TagManager extends React.Component {
       return el.text === text;
     }) === -1;
     if (isValid) {
-      axios.post("/api/createTag", { "text" : text }).then(() => {
+      axios.post('/api/createTag', { text }).then(() => {
         this.setState({
           text: ''
         })
@@ -24,7 +24,7 @@ class TagManager extends React.Component {
   };
   deleteTag = (id) => {
     return () => {
-      axios.post("/api/deleteTag", { "id" : id });
+      axios.post('/api/deleteTag', { id });
     };
   };
   handleInput = (event) => {
@@ -48,7 +48,7 @@ class TagManager extends React.Component {
     }
   };
   componentDidMount = () => {
-    axios.get("/api/tags").then(this.handleResponse);
+    axios.get('/api/tags').then(this.handleResponse);
   };
   render = () => {
     const tags = this.props.tags;

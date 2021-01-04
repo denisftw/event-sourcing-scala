@@ -6,14 +6,13 @@ import { Link } from 'react-router-dom';
 
 
 class QuestionList extends React.Component {
-  deleteQuestion = (questionId) => {
+  deleteQuestion = (id) => {
     return () => {
       ConfirmationService.showConfirmationDialog({
         title: 'Delete question',
         body: 'Are you sure you want to delete the question?'
       }, 'warning', () => {
-        axios.post("/api/deleteQuestion",
-          { "id" : questionId })
+        axios.post('/api/deleteQuestion', { id })
       });
     }
   };
@@ -26,7 +25,7 @@ class QuestionList extends React.Component {
     }
   };
   componentDidMount = () => {
-    axios.get("/api/questions").then(this.handleResponse);
+    axios.get('/api/questions').then(this.handleResponse);
   };
   render = () => {
     const questions = this.props.questions;

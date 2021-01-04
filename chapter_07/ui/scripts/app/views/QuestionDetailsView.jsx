@@ -11,7 +11,7 @@ class QuestionDetailsView extends React.Component {
     this.answerModalRef = React.createRef();
   }
   componentDidMount = () => {
-    const questionId = this.props.match.params['questionId'];
+    const questionId = this.props.match.params.questionId;
     axios.get(`/api/questionThread/${questionId}`).then(this.handleResponse);
   };
   handleResponse = (response) => {
