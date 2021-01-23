@@ -1,6 +1,5 @@
 package services
 
-import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
 import dao.Neo4JReadDao
 import messaging.{IMessageConsumer, IMessageProcessingRegistry}
@@ -12,7 +11,8 @@ import scala.concurrent.Future
 /**
   * Created by denis on 12/23/16.
   */
-class AnswerEventConsumer(readDao: Neo4JReadDao, clientBroadcastService: ClientBroadcastService,
+class AnswerEventConsumer(readDao: Neo4JReadDao,
+                          clientBroadcastService: ClientBroadcastService,
                           registry: IMessageProcessingRegistry,
                           readService: ReadService) extends IMessageConsumer {
   private val log = Logger(this.getClass)

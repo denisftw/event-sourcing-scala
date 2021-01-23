@@ -14,19 +14,21 @@ import services.{QuestionEventProducer, ReadService}
 import scala.concurrent.Future
 
 
-class QuestionController(components: ControllerComponents, questionEventProducer: QuestionEventProducer,
-    userAuthAction: UserAuthAction, readService: ReadService) extends AbstractController(components) {
-
+class QuestionController(components: ControllerComponents,
+                         questionEventProducer: QuestionEventProducer,
+                         userAuthAction: UserAuthAction,
+                         readService: ReadService)
+  extends AbstractController(components) {
   import util.ThreadPools.CPU
 
   def createQuestion() = userAuthAction.async { implicit request =>
     createQuestionForm.bindFromRequest().fold(
-      formWithErrors => Future.successful(BadRequest),
+      _ => Future.successful(BadRequest),
       data => {
         val resultF = questionEventProducer.createQuestion(
           data.title, data.details, data.tags, request.user.userId)
         resultF.map {
-          case Some(error) => InternalServerError
+          case Some(_) => InternalServerError
           case None => Ok
         }
       }
@@ -37,14 +39,14 @@ class QuestionController(components: ControllerComponents, questionEventProducer
     deleteQuestionForm.bindFromRequest().fold(
       _ => Future.successful(BadRequest),
       data => {
-        questionEventProducer.deleteQuestion(data.id, request.user.userId).map { _ =>
-          Ok
+        questionEventProducer.deleteQuestion(data.id, request.user.userId).map {
+          case Some(_) => InternalServerError
+          case None => Ok
         }
       }
     )
   }
 
-  import scala.util.{Failure, Success}
   def getQuestions() = Action.async { implicit request =>
     readService.getAllQuestions.map { questions =>
       Ok(Json.toJson(questions))

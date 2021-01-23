@@ -1,4 +1,4 @@
-name := """practical-event-sourcing-07"""
+name := """play-scala-event-sourcing"""
 
 val commonSettings = Seq(
   version := "1.0-SNAPSHOT",
@@ -27,10 +27,9 @@ libraryDependencies ++= Seq(
   "org.scalikejdbc" %% "scalikejdbc" % "3.5.0",
   "org.scalikejdbc" %% "scalikejdbc-streams" % "3.5.0",
   "org.scalikejdbc" %% "scalikejdbc-config"  % "3.5.0",
-  "io.reactivex.rxjava3" % "rxjava" % "3.0.8",
   "ch.qos.logback"  %  "logback-classic" % "1.2.3",
   "de.svenkubiak" % "jBCrypt" % "0.4.1",
   "org.neo4j.driver" % "neo4j-java-driver" % "4.2.0",
-  "com.rabbitmq" % "amqp-client" % "5.9.0",
-  "com.typesafe.akka" %% "akka-stream-kafka" % "2.0.5"
+  "com.typesafe.akka" %% "akka-stream-kafka" % "2.0.5",
+  "io.reactivex.rxjava3" % "rxjava" % "3.0.8"
 )

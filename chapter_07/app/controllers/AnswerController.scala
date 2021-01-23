@@ -14,8 +14,10 @@ import scala.concurrent.Future
 /**
   * Created by denis on 12/23/16.
   */
-class AnswerController(components: ControllerComponents, userAuthAction: UserAuthAction,
-    answerEventProducer: AnswerEventProducer) extends AbstractController(components) {
+class AnswerController(components: ControllerComponents,
+                       userAuthAction: UserAuthAction,
+                       answerEventProducer: AnswerEventProducer)
+  extends AbstractController(components) {
 
   def createAnswer() = userAuthAction.async { implicit request =>
     createAnswerForm.bindFromRequest().fold(

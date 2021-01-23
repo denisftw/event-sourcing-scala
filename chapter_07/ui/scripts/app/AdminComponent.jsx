@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import TimeTravelDashboard from './views/TimeTravelDashboard.jsx'
+import TimeTravelDashboard from './views/TimeTravelDashboard.jsx';
 
 class AdminComponent {
   init = () => {

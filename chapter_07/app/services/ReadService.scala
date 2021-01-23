@@ -1,9 +1,10 @@
 package services
 
-import java.util.UUID
+import com.appliedscala.events.LogRecord
 import dao.Neo4JReadDao
 import model.{Question, QuestionThread, Tag}
 
+import java.util.UUID
 import scala.concurrent.Future
 
 class ReadService(readDao: Neo4JReadDao, userService: UserService) {
@@ -44,5 +45,9 @@ class ReadService(readDao: Neo4JReadDao, userService: UserService) {
         QuestionThread(updatedQuestion, updatedAnswers)
       }
     }
+  }
+
+  def adjustState(event: LogRecord): Future[Unit] = {
+    readDao.processEvent(event)
   }
 }

@@ -20,7 +20,7 @@ class EditAnswerForm extends React.Component {
     }
   }
   resetState = () => {
-    const text = this.props.maybeAnswer != null ?
+    const text = this.props.maybeAnswer ?
       this.props.maybeAnswer.answerText : '';
     this.setState({
       answerText: text
@@ -63,8 +63,8 @@ class EditAnswerForm extends React.Component {
     }
   };
   render = () => {
-    const addButtonDisabled = this.state.answerText.length === 0;
-    const saveAnswerButtonText = this.props.maybeAnswer != null ?
+    const editButtonDisabled = this.state.answerText.length === 0;
+    const saveAnswerButtonText = this.props.maybeAnswer ?
       'Update answer' : 'Create answer';
     return <Modal
       isOpen={this.state.isOpen}
@@ -80,7 +80,7 @@ class EditAnswerForm extends React.Component {
         </div>
         <hr />
         <div className="form-group answer-edit-form__button-container">
-          <button disabled={addButtonDisabled}
+          <button disabled={editButtonDisabled}
                   className="btn btn-primary save-button"
                   onClick={this.saveEntity}
                   type="button">{saveAnswerButtonText}</button>

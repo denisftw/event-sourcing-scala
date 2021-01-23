@@ -2,7 +2,7 @@ package dao
 
 import java.util.UUID
 import com.appliedscala.events.LogRecord
-import com.appliedscala.events.answer._
+import com.appliedscala.events.answer.{AnswerCreated, AnswerDeleted, AnswerDownvoted, AnswerUpdated, AnswerUpvoted}
 import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
@@ -69,8 +69,8 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
         Neo4JUpdate(deleteTag(decoded.id))
       case QuestionCreated.actionName =>
         val decoded = record.data.as[QuestionCreated]
-        Neo4JUpdate(createQuestion(decoded.questionId, decoded.title, decoded.details,
-          decoded.createdBy, decoded.tags, decoded.created))
+        Neo4JUpdate(createQuestion(decoded.questionId, decoded.title,
+          decoded.details, decoded.createdBy, decoded.tags, decoded.created))
       case QuestionDeleted.actionName =>
         val decoded = record.data.as[QuestionDeleted]
         Neo4JUpdate(deleteQuestion(decoded.questionId))
@@ -141,7 +141,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
       """MATCH (a:Answer)-[:ANSWERS]->(Question {id: $questionId })
          OPTIONAL MATCH (u:User)-[:UPVOTES]->(a)
          RETURN collect(distinct u.id) as upvotes,
-         a.answerText as answerText, a.id as id, 
+         a.answerText as answerText, a.id as id,
          a.authorId as authorId, a.updated as updated"""
     val answerRecordsF = queryExecutor.executeQuery(Neo4JQuery(queryAnswer,
       Map("questionId" -> questionId.toString)))
@@ -203,7 +203,8 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
   }
 
   private def createQuestionUserQuery(questionId: UUID, title: String,
-      details: Option[String], addedBy: UUID, created: ZonedDateTime): Neo4JQuery = {
+      details: Option[String], addedBy: UUID, created: ZonedDateTime):
+  Neo4JQuery = {
     val detailsPart = details.getOrElse("")
     val createQuestion =
       """MATCH (u:User { id: $userId } )
@@ -238,7 +239,8 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
   private def createTag(tagId: UUID, tagText: String): Seq[Neo4JQuery] = {
     val update = """CREATE (:Tag { tagId: $tagId, tagText: $tagText })"""
-    Seq(Neo4JQuery(update, Map("tagId" -> tagId.toString, "tagText" -> tagText)))
+    Seq(Neo4JQuery(update, Map(
+      "tagId" -> tagId.toString, "tagText" -> tagText)))
   }
 
   private def deleteTag(tagId: UUID): Seq[Neo4JQuery] = {
@@ -306,5 +308,4 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     Seq(Neo4JQuery(update, Map(
       "answerId" -> answerId.toString, "userId" -> userId.toString)))
   }
-
 }

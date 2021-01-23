@@ -6,13 +6,14 @@ import messaging.IMessageProducer
 
 import java.util.UUID
 import scala.concurrent.Future
-import scala.util.{Success}
+import scala.util.Success
 
 
 /**
   * Created by denis on 12/6/16.
   */
-class ValidationService(validationDao: ValidationDao, clientBroadcastService: ClientBroadcastService) {
+class ValidationService(validationDao: ValidationDao,
+                        clientBroadcastService: ClientBroadcastService) {
 
   import util.ThreadPools.CPU
   def refreshState(events: Seq[LogRecord], fromScratch: Boolean):

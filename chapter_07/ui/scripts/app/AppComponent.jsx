@@ -1,14 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import axios from 'axios';
-import TagManager from './views/TagManager.jsx';
 import { createStore } from 'redux';
 import { Provider } from 'react-redux';
+import axios from 'axios';
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
 import NavigationBar from './views/NavigationBar.jsx';
 import AskQuestionView from './views/AskQuestionView.jsx';
 import NotificationService from './util/NotificationService.js';
 import QuestionComposite from './views/QuestionComposite.jsx';
+import TagManager from './views/TagManager.jsx';
+import 'event-source-polyfill';
 import RefreshPanel from './views/RefreshPanel.jsx';
 
 class AppComponent {
@@ -21,6 +22,16 @@ class AppComponent {
       // this.connectToSSEEndpoint();
       this.renderComponent(reactDiv);
     }
+  };
+  initLoginRedirecting = () => {
+    axios.interceptors.response.use((response) => {
+      return response;
+    }, (error) => {
+      if (error.response.status === 401) {
+        window.location = '/login';
+      }
+      return Promise.reject(error);
+    });
   };
   connectToWSEndpoint = () => {
     const loc = window.location;
@@ -38,10 +49,10 @@ class AppComponent {
     }
   };
   updateReceived = (data) => {
-    if (data['updateType'] === 'tags') {
+    if (data.updateType === 'tags') {
       this.store.dispatch({
         type: 'tags_updated',
-        data: data['updateData']
+        data: data.updateData
       });
     }
     else if (data['updateType'] === 'questions') {
@@ -81,7 +92,7 @@ class AppComponent {
   updateQuestionThreadId = (action) => {
     this.useWS(() => {
       if (action.type === 'question_thread_updated' ||
-        action.type === 'question_thread_loaded') {
+          action.type === 'question_thread_loaded') {
         const questionThreadId = action.data.question.id;
         this.streamWS.send(`{"questionThreadId": "${questionThreadId}"}`);
       }
@@ -116,16 +127,6 @@ class AppComponent {
       return updatedState;
     };
     this.store = createStore(reducer);
-  };
-  initLoginRedirecting = () => {
-    axios.interceptors.response.use((response) => {
-      return response;
-    }, (error) => {
-      if (error.response.status === 401) {
-        window.location = '/login';
-      }
-      return error.response;
-    });
   };
   renderComponent = (reactDiv) => {
     ReactDOM.render(<Provider store={this.store}>

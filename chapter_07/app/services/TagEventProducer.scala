@@ -8,8 +8,8 @@ import messaging.IMessageProcessingRegistry
 import scala.concurrent.Future
 
 /**
-  * Created by denis on 11/28/16.
-  */
+ * Created by denis on 11/28/16.
+ */
 class TagEventProducer(registry: IMessageProcessingRegistry,
                        validationService: ValidationService) {
 

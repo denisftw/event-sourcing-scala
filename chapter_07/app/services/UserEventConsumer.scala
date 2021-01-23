@@ -10,7 +10,9 @@ import scala.concurrent.Future
 /**
   * Created by denis on 12/26/16.
   */
-class UserEventConsumer(neo4JReadDao: Neo4JReadDao, registry: IMessageProcessingRegistry) extends IMessageConsumer {
+class UserEventConsumer(neo4JReadDao: Neo4JReadDao,
+                        registry: IMessageProcessingRegistry)
+  extends IMessageConsumer {
   private val log = Logger(this.getClass)
   import util.ThreadPools.CPU
 

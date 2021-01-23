@@ -20,7 +20,8 @@ case class Neo4JQuery(query: String, params: Map[String, AnyRef]) {
   }
 }
 object Neo4JQuery {
-  def simple(query: String): Neo4JQuery = Neo4JQuery(query, Map.empty[String, AnyRef])
+  def simple(query: String): Neo4JQuery =
+    Neo4JQuery(query, Map.empty[String, AnyRef])
 }
 
 import play.api.Configuration

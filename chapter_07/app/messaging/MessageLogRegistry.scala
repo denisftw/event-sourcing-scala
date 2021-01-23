@@ -11,9 +11,8 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySerializer}
 import play.api.{Configuration, Logger}
 
-import scala.concurrent.Future
-
-class MessageLogRegistry(configuration: Configuration, actorSystem: ActorSystem)
+class MessageLogRegistry(configuration: Configuration,
+                         actorSystem: ActorSystem)
                         (implicit val mat: Materializer)
   extends IMessageProcessingRegistry {
   private val log = Logger(this.getClass)
@@ -28,7 +27,7 @@ class MessageLogRegistry(configuration: Configuration, actorSystem: ActorSystem)
     .withGroupId(groupName)
     .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, offsetReset)
 
-  private val AllTopics = Set("tags" , "users", "questions" ,"answers")
+  private val AllTopics = Set("tags", "users", "questions", "answers")
   private def parseConsumerParams(queue: String): ConsumerParams = {
     val parts = queue.split("\\.")
     val topics = if (parts(1) == "*") AllTopics else Set(parts(1))
@@ -50,10 +49,9 @@ class MessageLogRegistry(configuration: Configuration, actorSystem: ActorSystem)
   override def registerConsumer(queue: String, consumer: IMessageConsumer): Unit = {
     val ConsumerParams(groupName, topics) = parseConsumerParams(queue)
     Consumer.atMostOnceSource(consumerSettings(groupName),
-      Subscriptions.topics(topics)).mapAsync(parallelism = 1) { msg =>
-      val event = msg.value()
-      consumer.messageReceived(event)
-      Future.successful(msg)
+      Subscriptions.topics(topics)).map { msg =>
+      consumer.messageReceived(msg.value())
+      msg
     }.toMat(Sink.ignore)(DrainingControl.apply).run()
   }
 

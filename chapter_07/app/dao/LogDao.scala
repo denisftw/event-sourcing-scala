@@ -18,7 +18,6 @@ import scala.concurrent.Future
   */
 class LogDao {
   import util.ThreadPools.IO
-
   def insertLogRecord(event: LogRecord): Future[Unit] = Future {
     NamedDB(Symbol("eventstore")).localTx { implicit session =>
       val jsonStr = event.data.toString()
@@ -36,6 +35,13 @@ class LogDao {
         map(rs2LogRecord).iterator()
     }
     Source.fromPublisher(publisher)
+  }
+
+  def getLogRecords: Future[Seq[LogRecord]] = Future {
+    NamedDB(Symbol("eventstore")).readOnly { implicit session =>
+      sql"""select * from logs order by timestamp""".
+        map(rs2LogRecord).list().apply()
+    }
   }
 
   private def rs2LogRecord(rs: WrappedResultSet): LogRecord = {

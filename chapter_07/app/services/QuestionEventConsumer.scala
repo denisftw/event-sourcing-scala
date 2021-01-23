@@ -14,7 +14,8 @@ import scala.concurrent.Future
 class QuestionEventConsumer(readDao: Neo4JReadDao,
                             clientBroadcastService: ClientBroadcastService,
                             registry: IMessageProcessingRegistry,
-                            readService: ReadService) extends IMessageConsumer {
+                            readService: ReadService)
+  extends IMessageConsumer {
   private val log = Logger(this.getClass)
   import util.ThreadPools.CPU
   registry.registerConsumer("read.questions", this)

@@ -7,13 +7,15 @@ import play.api.libs.EventSource
 import play.api.libs.json.JsValue
 import play.api.mvc._
 import security.{UserAuthAction, UserAwareAction, UserAwareRequest}
-import services.{AuthService, ClientBroadcastService, ConsumerAggregator, RewindService}
+import services.{AuthService, ClientBroadcastService, ConsumerAggregator}
 
 
 class MainController(components: ControllerComponents, assets: Assets,
-                     consumerAggregator: ConsumerAggregator, rewindService: RewindService,
-                     authService: AuthService, clientBroadcastService: ClientBroadcastService,
-                     userAuthAction: UserAuthAction, userAwareAction: UserAwareAction)
+                     clientBroadcastService: ClientBroadcastService,
+                     consumerAggregator: ConsumerAggregator,
+                     userAuthAction: UserAuthAction,
+                     authService: AuthService,
+                     userAwareAction: UserAwareAction)
   extends AbstractController(components) {
 
   import util.ThreadPools.CPU
@@ -34,7 +36,8 @@ class MainController(components: ControllerComponents, assets: Assets,
   }
 
   def serverEventStream() = userAwareAction { request =>
-    val source = clientBroadcastService.createEventStream(request.user.map(_.userId))
+    val source = clientBroadcastService.createEventStream(
+      request.user.map(_.userId))
     Ok.chunked(source.via(EventSource.flow)).as(ContentTypes.EVENT_STREAM)
   }
 

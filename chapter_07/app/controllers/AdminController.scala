@@ -16,8 +16,9 @@ import scala.concurrent.Future
 /**
   * Created by denis on 12/29/16.
   */
-class AdminController(components: ControllerComponents, userAuthAction: UserAuthAction,
-    rewindService: RewindService) extends AbstractController(components) {
+class AdminController(components: ControllerComponents,
+    userAuthAction: UserAuthAction, rewindService: RewindService)
+  extends AbstractController(components) {
 
   import util.ThreadPools.CPU
   val log = Logger(this.getClass)

@@ -15,7 +15,10 @@ class TagController(components: ControllerComponents, tagEventProducer: TagEvent
     createTagForm.bindFromRequest().fold(
       _ => Future.successful(BadRequest),
       data => {
-        tagEventProducer.createTag(data.text, request.user.userId).map(_ => Ok)
+        tagEventProducer.createTag(data.text, request.user.userId).map {
+          case Some(_) => InternalServerError
+          case None => Ok
+        }
       }
     )
   }
@@ -24,12 +27,15 @@ class TagController(components: ControllerComponents, tagEventProducer: TagEvent
     deleteTagForm.bindFromRequest().fold(
       _ => Future.successful(BadRequest),
       data => {
-        tagEventProducer.deleteTag(data.id, request.user.userId).map(_ => Ok)
+        tagEventProducer.deleteTag(data.id, request.user.userId).map {
+          case Some(_) => InternalServerError
+          case None => Ok
+        }
       }
     )
   }
 
-  def getTags() = Action.async { implicit request =>
+  def getTags = Action.async { implicit request =>
     readService.getAllTags.map { tags =>
       Ok(Json.toJson(tags))
     }

@@ -3,9 +3,9 @@ package dao
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.appliedscala.events.LogRecord
+import com.appliedscala.events.answer.{AnswerCreated, AnswerDeleted, AnswerDownvoted, AnswerUpdated, AnswerUpvoted}
 
 import java.util.UUID
-import com.appliedscala.events.answer._
 import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import com.appliedscala.events.tag.{TagCreated, TagDeleted}
 import com.appliedscala.events.user.{UserActivated, UserDeactivated}
@@ -24,7 +24,8 @@ class ValidationDao(implicit mat: Materializer) {
   def validateSingle(event: LogRecord): Future[Option[String]] = {
     processSingleEvent(event, skipValidation = false)
   }
-  def refreshState(events: Seq[LogRecord], fromScratch: Boolean): Future[Option[String]] = {
+  def refreshState(events: Seq[LogRecord], fromScratch: Boolean):
+  Future[Option[String]] = {
     resetState(fromScratch).flatMap {
       case Some(value) => Future.successful(Some(value))
       case None => processEvents(events, skipValidation = true)
@@ -32,7 +33,8 @@ class ValidationDao(implicit mat: Materializer) {
   }
 
   import util.ThreadPools.IO
-  private def validateTagCreated(tagText: String, userId: UUID): Future[Option[String]] = {
+  private def validateTagCreated(tagText: String, userId: UUID):
+  Future[Option[String]] = {
     validateUser(userId) {
       val maybeExistingF = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
@@ -85,10 +87,13 @@ class ValidationDao(implicit mat: Materializer) {
     }
   }
 
-  private def validateUserActivated(userId: UUID): Future[Option[String]] = {
+  private def validateUserActivated(userId: UUID):
+  Future[Option[String]] = {
     isActivated(userId).transform {
-      case Success(true) => Success(Some("The user is already activated!"))
-      case Failure(_) => Success(Some("Validation state exception"))
+      case Success(true) =>
+        Success(Some("The user is already activated!"))
+      case Failure(_) =>
+        Success(Some("Validation state exception"))
       case Success(false) => Success(None)
     }
   }
@@ -102,10 +107,13 @@ class ValidationDao(implicit mat: Materializer) {
     }
   }
 
-  private def validateUser(userId: UUID)(block: => Future[Option[String]]): Future[Option[String]] = {
+  private def validateUser(userId: UUID)(block: => Future[Option[String]]):
+  Future[Option[String]] = {
     isActivated(userId).transformWith {
-      case Success(false) => Future.successful(Some("The user is not activated!"))
-      case Failure(_) => Future.successful(Some("Validation state exception!"))
+      case Success(false) =>
+        Future.successful(Some("The user is not activated!"))
+      case Failure(_) =>
+        Future.successful(Some("Validation state exception!"))
       case Success(true) => block
     }
   }
@@ -203,15 +211,15 @@ class ValidationDao(implicit mat: Materializer) {
       val resultF = Future {
         NamedDB(Symbol("validation")).readOnly { implicit session =>
           val questionExists =
-            sql"select * from question_user where question_id = ${questionId}".
+            sql"select * from question_user where question_id = $questionId".
               map(_.string("question_id")).headOption().apply().isDefined
           val answerExists =
-            sql"select * from answer_user where answer_id = ${answerId}".
+            sql"select * from answer_user where answer_id = $answerId".
               map(_.string("answer_id")).headOption().apply().isDefined
           val alreadyWritten =
             sql"""select user_id from answer_user au inner join
                question_answer qa on au.answer_id = qa.answer_id
-               where question_id = ${questionId} and user_id = ${userId}""".
+               where question_id = $questionId and user_id = $userId""".
               map(_.string("user_id")).headOption().apply().isDefined
           (questionExists, answerExists, alreadyWritten)
         }
@@ -382,15 +390,15 @@ class ValidationDao(implicit mat: Materializer) {
     }
   }
 
-  private def processEvents(events: Seq[LogRecord], skipValidation: Boolean): Future[Option[String]] = {
-    log.info(s"Processing ${events.size} events, skip validation: $skipValidation")
-    val result = Source.apply(events).foldAsync(Option.empty[String]) { (previousResult, nextEvent) =>
-      previousResult match {
-        case None => processSingleEvent(nextEvent, skipValidation)
-        case _ => Future.successful(previousResult)
-      }
+  private def processEvents(events: Seq[LogRecord], skipValidation: Boolean):
+  Future[Option[String]] = {
+    Source.apply(events).foldAsync(Option.empty[String]) {
+      (previousResult, nextEvent) =>
+        previousResult match {
+          case None => processSingleEvent(nextEvent, skipValidation)
+          case _ => Future.successful(previousResult)
+        }
     }.runWith(Sink.last)
-    result
   }
 
   // Not used - example only

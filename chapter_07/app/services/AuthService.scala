@@ -24,7 +24,8 @@ class AuthService(sessionDao: SessionDao, userDao: UserDao,
     }
   }
 
-  def register(userCode: String, fullName: String, password: String): Future[Cookie] = {
+  def register(userCode: String, fullName: String, password: String):
+  Future[Cookie] = {
     val userF = userDao.insertUser(userCode, fullName, password)
     userF.flatMap { user =>
       userEventProducer.activateUser(user.userId)

@@ -34,7 +34,7 @@ class QuestionDetailsView extends React.Component {
 
     // User
     const userIdHolder = document.getElementById('data-user-id-holder');
-    const maybeUserId =  (userIdHolder != null) ?
+    const maybeUserId =  userIdHolder ?
       userIdHolder.getAttribute('data-user-id') : null;
     const userNotLoggedIn = maybeUserId == null;
 
@@ -72,11 +72,11 @@ class QuestionDetailsView extends React.Component {
           const updatedDate = moment(answer.updated).format('DD/MM/YYYY');
           const upvotes = answer.upvotes;
           const upvoteButtonDisabled = !maybeUserId ||
-            answer.authorId == maybeUserId;
+            answer.authorId === maybeUserId;
           const deleteButtonDisabled = !maybeUserId ||
-            answer.authorId != maybeUserId;
-          const alreadyUpvoted = !!maybeUserId && upvotes.findIndex((id) => {
-              return id == maybeUserId; }) != -1;
+            answer.authorId !== maybeUserId;
+          const alreadyUpvoted = maybeUserId && upvotes.findIndex(id => {
+              return id === maybeUserId; }) !== -1;
           const upvoteButton = alreadyUpvoted ?
             <button type="button" className="btn btn-outline-secondary"
                 onClick={this.downvoteAnswer(question.id, answer.answerId)}
@@ -114,7 +114,8 @@ class QuestionDetailsView extends React.Component {
           </div>
         })}
       </div>
-      <EditAnswerForm ref={this.answerModalRef} maybeAnswer={maybeAnswer} questionId={question.id} />
+      <EditAnswerForm ref={this.answerModalRef} maybeAnswer={maybeAnswer}
+                      questionId={question.id} />
     </div>
   };
   openEditAnswerForm = () => {

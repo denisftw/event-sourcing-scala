@@ -2,23 +2,21 @@ package services
 
 import akka.stream.Materializer
 import dao.{LogDao, Neo4JReadDao}
-import play.api.Logger
 import model.ServerSentMessage
-
-import java.time.ZonedDateTime
+import play.api.Logger
 import play.api.libs.json.JsBoolean
 
+import java.time.ZonedDateTime
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
-
 
 /**
   * Created by denis on 12/12/16.
   */
-class RewindService(clientBroadcastService: ClientBroadcastService,
-                    validationService: ValidationService,
-                    readDao: Neo4JReadDao, logDao: LogDao)(implicit mat: Materializer) {
-
+class RewindService(validationService: ValidationService,
+                    readDao: Neo4JReadDao, logDao: LogDao,
+                    clientBroadcastService: ClientBroadcastService)
+                   (implicit mat: Materializer) {
   private val log = Logger(this.getClass)
 
   private def message2Future(errorMessage: Option[String]): Future[Unit] = {
@@ -39,10 +37,10 @@ class RewindService(clientBroadcastService: ClientBroadcastService,
       _ <- validationResetF
     } yield ()
 
-    val bufferSize = 200
     resetF.flatMap { _ =>
+      val bufferSize = 20
       logDao.getLogRecordStream(upTo).flatMap { eventSource =>
-        eventSource.grouped(bufferSize).map { events =>
+        eventSource.grouped(bufferSize).mapAsync(parallelism = 1) { events =>
           for {
             _ <- readDao.refreshState(events, fromScratch = false)
             _ <- validationService.refreshState(events, fromScratch = false).map(message2Future)

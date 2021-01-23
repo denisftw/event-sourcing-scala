@@ -1,6 +1,6 @@
 import React from 'react';
-import axios from 'axios';
 import { connect } from 'react-redux';
+import axios from 'axios';
 
 class TagManager extends React.Component {
   constructor(props) {
@@ -9,6 +9,19 @@ class TagManager extends React.Component {
       text: ''
     };
   }
+  componentDidMount = () => {
+    axios.get('/api/tags').then(this.handleResponse);
+  };
+  handleResponse = (response) => {
+    if (response.status === 200) {
+      this.props.dispatch({
+        type: 'tags_updated',
+        data: response.data
+      });
+    } else {
+      console.error(response.statusText);
+    }
+  };
   addTag = () => {
     const text = this.state.text;
     const isValid = this.props.tags.findIndex((el) => {
@@ -37,19 +50,6 @@ class TagManager extends React.Component {
       this.addTag();
     }
   };
-  handleResponse = (response) => {
-    if (response.status === 200) {
-      this.props.dispatch({
-        type: 'tags_updated',
-        data: response.data
-      });
-    } else {
-      console.error(response.statusText);
-    }
-  };
-  componentDidMount = () => {
-    axios.get('/api/tags').then(this.handleResponse);
-  };
   render = () => {
     const tags = this.props.tags;
     return <div className="tag-manager">
@@ -72,7 +72,7 @@ class TagManager extends React.Component {
           })}
         </div>
       </div>
-    </div>
+    </div>;
   }
 }
 

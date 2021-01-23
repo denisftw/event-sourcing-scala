@@ -9,7 +9,7 @@ class RefreshPanel extends React.Component {
     return this.props.refreshNeeded ?
       <div className="view-home-composite__refresh-panel"
            onClick={this.refresh}>
-        Server data was updated. Click to refresh the page</div> : null;
+        Server data were updated. Click to refresh the page</div> : null;
   }
 }
 
