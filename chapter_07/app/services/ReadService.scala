@@ -6,16 +6,16 @@ import model.{Question, QuestionThread, Tag}
 
 import scala.concurrent.Future
 
-class ReadService(neo4JReadDao: Neo4JReadDao, userService: UserService) {
+class ReadService(readDao: Neo4JReadDao, userService: UserService) {
   import util.ThreadPools.CPU
 
   def getAllTags: Future[Seq[Tag]] = {
-    neo4JReadDao.getAllTags
+    readDao.getAllTags
   }
 
   def getAllQuestions: Future[Seq[Question]] = {
     val namesF = userService.getUserFullNameMap
-    val questionsF = neo4JReadDao.getQuestions
+    val questionsF = readDao.getQuestions
     for {
       names <- namesF
       questions <- questionsF
@@ -27,7 +27,7 @@ class ReadService(neo4JReadDao: Neo4JReadDao, userService: UserService) {
   }
 
   def getQuestionThread(questionId: UUID): Future[Option[QuestionThread]] = {
-    val maybeThreadF = neo4JReadDao.getQuestionThread(questionId)
+    val maybeThreadF = readDao.getQuestionThread(questionId)
     val namesF = userService.getUserFullNameMap
     for {
       names <- namesF

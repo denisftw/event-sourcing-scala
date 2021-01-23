@@ -12,7 +12,6 @@ import play.api.mvc.DefaultControllerComponents
 import scalikejdbc.config.DBs
 import security.{UserAuthAction, UserAwareAction}
 import services.{ClientBroadcastService, _}
-import util.EventValidator
 
 import scala.concurrent.Future
 
@@ -68,21 +67,20 @@ class AppComponents(context: Context) extends BuiltInComponentsFromContext(conte
   lazy val neo4JQueryExecutor = wire[Neo4JQueryExecutor]
   lazy val validationDao = wire[ValidationDao]
 
-  lazy val eventValidator = wire[EventValidator]
   lazy val validationService = wire[ValidationService]
   lazy val rewindService = wire[RewindService]
   lazy val userService = wire[UserService]
   lazy val authService = wire[AuthService]
   lazy val userAuthAction = wire[UserAuthAction]
   lazy val userAwareAction = wire[UserAwareAction]
-  lazy val messageProcessingRegistry: MessageLogRegistry = wire[MessageLogRegistry]
+  lazy val messageRegistry: MessageLogRegistry = wire[MessageLogRegistry]
   lazy val clientBroadcastService = wire[ClientBroadcastService]
 
   override lazy val dynamicEvolutions = new DynamicEvolutions
 
   applicationLifecycle.addStopHook { () =>
     DBs.closeAll()
-    messageProcessingRegistry.shutdown()
+    messageRegistry.shutdown()
     Future.successful(())
   }
 

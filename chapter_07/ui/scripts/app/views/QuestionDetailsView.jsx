@@ -15,7 +15,7 @@ class QuestionDetailsView extends React.Component {
     axios.get(`/api/questionThread/${questionId}`).then(this.handleResponse);
   };
   handleResponse = (response) => {
-    if (response.status == 200) {
+    if (response.status === 200) {
       this.props.dispatch({
         type: 'question_thread_loaded',
         data: response.data
@@ -23,8 +23,7 @@ class QuestionDetailsView extends React.Component {
     }
   };
   render = () => {
-    if (this.props.questionThread == null ||
-      this.props.questionThread.question == null) {
+    if (!this.props.questionThread || !this.props.questionThread.question) {
       return <div className="question-thread-view-form">
         <div className="question-thread-view-form__body">
           <div className="question-thread-view-form__loading">Loading...</div>
@@ -44,7 +43,7 @@ class QuestionDetailsView extends React.Component {
     const answerInd = answers.findIndex((answer) => {
       return answer.authorId === maybeUserId;
     });
-    const answerExists = answerInd != -1;
+    const answerExists = answerInd !== -1;
     const maybeAnswer = answerExists ? answers[answerInd] : null;
     const editAnswerText = answerExists ? 'Edit answer' : 'Add answer';
 

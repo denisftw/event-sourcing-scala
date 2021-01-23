@@ -17,14 +17,16 @@ class MessageLogRegistry(configuration: Configuration, actorSystem: ActorSystem)
                         (implicit val mat: Materializer)
   extends IMessageProcessingRegistry {
   private val log = Logger(this.getClass)
-  private val bootstrapServers = configuration.get[String]("kafka.bootstrap.servers")
+  private val bootstrapServers = configuration.
+    get[String]("kafka.bootstrap.servers")
+  private val offsetReset = configuration.
+    get[String]("kafka.auto.offset.reset")
 
   private def consumerSettings(groupName: String) = ConsumerSettings(actorSystem,
     new ByteArrayDeserializer, new ByteArrayDeserializer)
-    .withBootstrapServers(configuration.get[String]("kafka.bootstrap.servers"))
+    .withBootstrapServers(bootstrapServers)
     .withGroupId(groupName)
-    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
-      configuration.get[String]("kafka.auto.offset.reset"))
+    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, offsetReset)
 
   private val AllTopics = Set("tags" , "users", "questions" ,"answers")
   private def parseConsumerParams(queue: String): ConsumerParams = {

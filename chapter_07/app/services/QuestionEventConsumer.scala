@@ -1,6 +1,5 @@
 package services
 
-import akka.actor.ActorSystem
 import com.appliedscala.events.LogRecord
 import dao.Neo4JReadDao
 import messaging.{IMessageConsumer, IMessageProcessingRegistry}
@@ -12,9 +11,10 @@ import scala.concurrent.Future
 /**
   * Created by denis on 12/14/16.
   */
-class QuestionEventConsumer(neo4JReadDao: Neo4JReadDao,
-                            actorSystem: ActorSystem, clientBroadcastService: ClientBroadcastService,
-                            registry: IMessageProcessingRegistry, readService: ReadService) extends IMessageConsumer {
+class QuestionEventConsumer(readDao: Neo4JReadDao,
+                            clientBroadcastService: ClientBroadcastService,
+                            registry: IMessageProcessingRegistry,
+                            readService: ReadService) extends IMessageConsumer {
   private val log = Logger(this.getClass)
   import util.ThreadPools.CPU
   registry.registerConsumer("read.questions", this)
@@ -27,7 +27,7 @@ class QuestionEventConsumer(neo4JReadDao: Neo4JReadDao,
 
   private def adjustReadState(logRecord: LogRecord): Future[Unit] = {
     for {
-      _ <- neo4JReadDao.handleEvent(logRecord)
+      _ <- readDao.processEvent(logRecord)
       questions <- readService.getAllQuestions
     } yield {
       val update = ServerSentMessage.create("questions", questions)

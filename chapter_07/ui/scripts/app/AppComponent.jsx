@@ -61,7 +61,8 @@ class AppComponent {
         messageType: 'error',
         messageText: data['error']
       });
-    } else if (data['updateType'] === 'stateRebuilt') {
+    }
+    else if (data['updateType'] === 'stateRebuilt') {
       this.store.dispatch({
         type: 'state_rebuilt',
         data: true

@@ -6,14 +6,13 @@ import com.appliedscala.events.answer._
 import messaging.IMessageProcessingRegistry
 
 import java.time.ZonedDateTime
-import util.EventValidator
 
 import scala.concurrent.Future
 
 /**
   * Created by denis on 12/23/16.
   */
-class AnswerEventProducer(registry: IMessageProcessingRegistry, eventValidator: EventValidator) {
+class AnswerEventProducer(registry: IMessageProcessingRegistry, validationService: ValidationService) {
 
   private val producer = registry.createProducer("answers")
 
@@ -24,14 +23,14 @@ class AnswerEventProducer(registry: IMessageProcessingRegistry, eventValidator: 
     val event = AnswerCreated(answerId, answerText,
       questionId, createdBy, created)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(createdBy, record, producer)
+    validationService.validateAndSend(createdBy, record, producer)
   }
 
   def deleteAnswer(questionId: UUID, answerId: UUID,
          deletedBy: UUID): Future[Option[String]] = {
     val event = AnswerDeleted(answerId, questionId, deletedBy)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(deletedBy, record, producer)
+    validationService.validateAndSend(deletedBy, record, producer)
   }
 
   def updateAnswer(questionId: UUID, answerId: UUID,
@@ -40,20 +39,20 @@ class AnswerEventProducer(registry: IMessageProcessingRegistry, eventValidator: 
     val event = AnswerUpdated(answerId, answerText,
       questionId, updatedBy, updated)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(updatedBy, record, producer)
+    validationService.validateAndSend(updatedBy, record, producer)
   }
 
   def upvoteAnswer(questionId: UUID, answerId: UUID,
          userId: UUID): Future[Option[String]] = {
     val event = AnswerUpvoted(answerId, questionId, userId)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(userId, record, producer)
+    validationService.validateAndSend(userId, record, producer)
   }
 
   def downvoteAnswer(questionId: UUID, answerId: UUID,
          userId: UUID): Future[Option[String]] = {
     val event = AnswerDownvoted(answerId, questionId, userId)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(userId, record, producer)
+    validationService.validateAndSend(userId, record, producer)
   }
 }

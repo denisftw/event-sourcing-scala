@@ -23,7 +23,7 @@ class MainController(components: ControllerComponents, assets: Assets,
       WebPageData("Home")))
   }
 
-  def indexParam(unused: String) = index
+  def indexParam(unused: String) = index()
 
   def error500() = Action {
     InternalServerError(views.html.errorPage())

@@ -15,12 +15,11 @@ import scala.util.{Failure, Success}
 /**
   * Created by denis on 12/12/16.
   */
-import akka.actor.ActorSystem
 class RewindService(clientBroadcastService: ClientBroadcastService,
                     validationService: ValidationService,
-                    neo4JReadDao: Neo4JReadDao, logDao: LogDao)(implicit mat: Materializer) {
+                    readDao: Neo4JReadDao, logDao: LogDao)(implicit mat: Materializer) {
 
-  val log = Logger(this.getClass)
+  private val log = Logger(this.getClass)
 
   private def message2Future(errorMessage: Option[String]): Future[Unit] = {
     errorMessage match {
@@ -33,7 +32,7 @@ class RewindService(clientBroadcastService: ClientBroadcastService,
 
   private def recreateState(upTo: ZonedDateTime): Future[Unit] = {
     // Resetting the state
-    val readResetF = neo4JReadDao.refreshState(Nil, fromScratch = true)
+    val readResetF = readDao.refreshState(Nil, fromScratch = true)
     val validationResetF = validationService.refreshState(Nil, fromScratch = true)
     val resetF = for {
       _ <- readResetF
@@ -42,11 +41,11 @@ class RewindService(clientBroadcastService: ClientBroadcastService,
 
     val bufferSize = 200
     resetF.flatMap { _ =>
-      logDao.getLogRecordStream(Some(upTo)).flatMap { eventSource =>
+      logDao.getLogRecordStream(upTo).flatMap { eventSource =>
         eventSource.grouped(bufferSize).map { events =>
           for {
-            _ <- neo4JReadDao.refreshState(events, fromScratch = false)
-            _ <- validationService.refreshState(events, fromScratch = true).map(message2Future)
+            _ <- readDao.refreshState(events, fromScratch = false)
+            _ <- validationService.refreshState(events, fromScratch = false).map(message2Future)
           } yield ()
         }.run().map(_ => ())
       }

@@ -11,7 +11,9 @@ lazy val events = (project in file("events")).settings(commonSettings).
     "com.typesafe.play" %% "play-json" % "2.8.1"
   )))
 
-lazy val root = (project in file(".")).settings(commonSettings).enablePlugins(PlayScala)
+lazy val root = (project in file("."))
+  .settings(commonSettings)
+  .enablePlugins(PlayScala)
   .aggregate(events)
   .dependsOn(events)
 

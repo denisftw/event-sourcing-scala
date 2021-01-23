@@ -12,8 +12,8 @@ import scala.concurrent.Future
 /**
   * Created by denis on 12/23/16.
   */
-class AnswerEventConsumer(neo4JReadDao: Neo4JReadDao, clientBroadcastService: ClientBroadcastService,
-                          actorSystem: ActorSystem, registry: IMessageProcessingRegistry,
+class AnswerEventConsumer(readDao: Neo4JReadDao, clientBroadcastService: ClientBroadcastService,
+                          registry: IMessageProcessingRegistry,
                           readService: ReadService) extends IMessageConsumer {
   private val log = Logger(this.getClass)
   import util.ThreadPools.CPU
@@ -26,12 +26,13 @@ class AnswerEventConsumer(neo4JReadDao: Neo4JReadDao, clientBroadcastService: Cl
   }
 
   private def adjustReadState(logRecord: LogRecord): Future[Unit] = {
-    neo4JReadDao.handleEventWithUpdate(logRecord) { maybeUpdateId =>
+    readDao.handleEventWithUpdate(logRecord) { maybeUpdateId =>
       maybeUpdateId.map { updateId =>
         readService.getQuestionThread(updateId).map { maybeThread =>
           maybeThread.map { thread =>
             val update = ServerSentMessage.create("questionThread", thread)
-            clientBroadcastService.broadcastQuestionThreadUpdate(thread.question.id, update.json)
+            clientBroadcastService.broadcastQuestionThreadUpdate(
+              thread.question.id, update.json)
           }
         }
       }

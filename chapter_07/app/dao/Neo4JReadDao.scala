@@ -11,7 +11,6 @@ import model.{Answer, Question, QuestionThread, Tag}
 import java.time.ZonedDateTime
 import org.neo4j.driver.Record
 import services.{Neo4JQuery, Neo4JQueryExecutor, Neo4JUpdate}
-import util.BaseTypes
 
 import scala.concurrent.Future
 
@@ -42,7 +41,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     } yield ()
   }
 
-  def handleEvent(event: LogRecord): Future[Unit] = {
+  def processEvent(event: LogRecord): Future[Unit] = {
     val update = prepareUpdates(event)
     queryExecutor.executeSequentially(update)
   }
@@ -155,8 +154,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
   private def recordToAnswer(questionId: UUID, record: Record): Answer = {
     val answerText = record.get("answerText").asString()
     val answerId = UUID.fromString(record.get("id").asString())
-    val updatedStr = record.get("updated").asString()
-    val updated = BaseTypes.parseISO8601(updatedStr)
+    val updated = record.get("updated").asZonedDateTime()
     val answerAuthorId = UUID.fromString(record.get("authorId").asString())
     val upvotesIndices = 0.until(record.get("upvotes").size()).toList
     val upvotesSeq = upvotesIndices.map { index =>
@@ -170,10 +168,9 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     val detailsStr = record.get("details").asString()
     val details = if (detailsStr.isEmpty) None else Some(detailsStr)
     val title = record.get("title").asString()
-    val createdStr = record.get("created").asString()
+    val created = record.get("created").asZonedDateTime()
     val questionId = UUID.fromString(record.get("question_id").asString())
     val authorId = UUID.fromString(record.get("user_id").asString())
-    val created = BaseTypes.parseISO8601(createdStr)
     val tagsSize = record.get("tags").size()
     val tagsIndices = 0.until(tagsSize).toList
     val tags = tagsIndices.map { index =>
@@ -207,7 +204,6 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
   private def createQuestionUserQuery(questionId: UUID, title: String,
       details: Option[String], addedBy: UUID, created: ZonedDateTime): Neo4JQuery = {
-    val createdFmt = BaseTypes.formatISO8601(created)
     val detailsPart = details.getOrElse("")
     val createQuestion =
       """MATCH (u:User { id: $userId } )
@@ -217,7 +213,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
     Neo4JQuery(createQuestion,
       Map("userId" -> addedBy.toString, "title" -> title,
         "questionId" -> questionId.toString,
-        "created" -> createdFmt, "details" -> detailsPart))
+        "created" -> created, "details" -> detailsPart))
   }
 
   private def createQuestionTagQuery(questionId: UUID,
@@ -262,7 +258,6 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
   private def createAnswer(answerId: UUID, questionId: UUID, createdBy: UUID,
       answerText: String, created: ZonedDateTime): Seq[Neo4JQuery] = {
-    val createdFmt = BaseTypes.formatISO8601(created)
     val createAnswer =
       """
         MATCH (u:User { id: $authorId } )
@@ -271,7 +266,7 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
          (a)-[wb:ANSWERED_BY]->(u)-[w:WROTE_ANSWER]->(a)
       """
     val createAnswerInfo = Neo4JQuery(createAnswer, Map("answerText" -> answerText,
-      "answerId" -> answerId.toString, "updated" -> createdFmt, "authorId" -> createdBy.toString))
+      "answerId" -> answerId.toString, "updated" -> created, "authorId" -> createdBy.toString))
     val linkToQuestion =
       """
         MATCH (a:Answer { id: $answerId }), (q:Question { id: $questionId })
@@ -283,14 +278,13 @@ class Neo4JReadDao(queryExecutor: Neo4JQueryExecutor) {
 
   private def updateAnswer(answerId: UUID, updatedText: String,
      updated: ZonedDateTime): Seq[Neo4JQuery] = {
-    val updatedFmt = BaseTypes.formatISO8601(updated)
     val update =
       """
          MATCH (a:Answer { id: $answerId })
          SET a.answerText = $answerText, a.updated = $updated
       """
     Seq(Neo4JQuery(update, Map("answerId" -> answerId.toString,
-      "answerText" -> updatedText, "updated" -> updatedFmt)))
+      "answerText" -> updatedText, "updated" -> updated)))
   }
 
   private def deleteAnswer(answerId: UUID): Seq[Neo4JQuery] = {

@@ -13,7 +13,7 @@ import scala.concurrent.Future
 /**
   * Created by denis on 12/3/16.
   */
-class TagEventConsumer(readDao: Neo4JReadDao, actorSystem: ActorSystem, clientBroadcastService: ClientBroadcastService,
+class TagEventConsumer(readDao: Neo4JReadDao, clientBroadcastService: ClientBroadcastService,
                        registry: IMessageProcessingRegistry) extends IMessageConsumer {
   private val log = Logger(this.getClass)
   import util.ThreadPools.CPU
@@ -27,7 +27,7 @@ class TagEventConsumer(readDao: Neo4JReadDao, actorSystem: ActorSystem, clientBr
 
   private def adjustReadState(logRecord: LogRecord): Future[Unit] = {
     for {
-      _ <- readDao.handleEvent(logRecord)
+      _ <- readDao.processEvent(logRecord)
       tags <- readDao.getAllTags
     } yield {
       val update = ServerSentMessage.create("tags", tags)

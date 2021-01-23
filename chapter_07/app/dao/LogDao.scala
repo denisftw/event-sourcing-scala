@@ -28,9 +28,9 @@ class LogDao {
     }
   }
 
-  def getLogRecordStream(maybeUpTo: Option[ZonedDateTime]): Future[Source[LogRecord, NotUsed]] = Future {
+  def getLogRecordStream(upTo: ZonedDateTime):
+  Future[Source[LogRecord, NotUsed]] = Future {
     import scalikejdbc.streams._
-    val upTo = maybeUpTo.getOrElse(ZonedDateTime.now())
     val publisher = NamedDB(Symbol("eventstore")).readOnlyStream {
       sql"""select * from logs where timestamp <= $upTo order by timestamp""".
         map(rs2LogRecord).iterator()

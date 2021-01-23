@@ -6,7 +6,6 @@ import com.appliedscala.events.question.{QuestionCreated, QuestionDeleted}
 import messaging.IMessageProcessingRegistry
 
 import java.time.ZonedDateTime
-import util.EventValidator
 
 import scala.concurrent.Future
 
@@ -14,7 +13,7 @@ import scala.concurrent.Future
   * Created by denis on 12/14/16.
   */
 class QuestionEventProducer(registry: IMessageProcessingRegistry,
-                            eventValidator: EventValidator) {
+                            validationService: ValidationService) {
 
   private val producer = registry.createProducer("questions")
 
@@ -25,13 +24,13 @@ class QuestionEventProducer(registry: IMessageProcessingRegistry,
     val event = QuestionCreated(title, details, tags,
       questionId, createdBy, created)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(createdBy, record, producer)
+    validationService.validateAndSend(createdBy, record, producer)
   }
 
   def deleteQuestion(questionId: UUID, deletedBy: UUID):
   Future[Option[String]] = {
     val event = QuestionDeleted(questionId, deletedBy)
     val record = LogRecord.fromEvent(event)
-    eventValidator.validateAndSend(deletedBy, record, producer)
+    validationService.validateAndSend(deletedBy, record, producer)
   }
 }

@@ -38,7 +38,7 @@ class TagManager extends React.Component {
     }
   };
   handleResponse = (response) => {
-    if (response.status == 200) {
+    if (response.status === 200) {
       this.props.dispatch({
         type: 'tags_updated',
         data: response.data

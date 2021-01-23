@@ -17,7 +17,7 @@ class QuestionList extends React.Component {
     }
   };
   handleResponse = (response) => {
-    if (response.status == 200) {
+    if (response.status === 200) {
       this.props.dispatch({
         type: 'questions_updated',
         data: response.data
@@ -42,7 +42,9 @@ class QuestionList extends React.Component {
             <div className="question-list__one-question__title">
               <Link to={"/questions/" + question.id}>{question.title}</Link>
               <a href="#" onClick={this.deleteQuestion(question.id)}>
-                <span className="glyphicon glyphicon-remove" />
+                <svg viewBox="0 0 24 24" fill="currentColor" height="1em" width="1em">
+                  <path d="M20 6.91L17.09 4 12 9.09 6.91 4 4 6.91 9.09 12 4 17.09 6.91 20 12 14.91 17.09 20 20 17.09 14.91 12 20 6.91z" />
+                </svg>
               </a>
             </div>
             <div className="question-list__one-question__author">

@@ -23,6 +23,6 @@ class UserEventConsumer(neo4JReadDao: Neo4JReadDao, registry: IMessageProcessing
   }
 
   private def adjustReadState(logRecord: LogRecord): Future[Unit] = {
-    neo4JReadDao.handleEvent(logRecord)
+    neo4JReadDao.processEvent(logRecord)
   }
 }
