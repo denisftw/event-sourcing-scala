@@ -15,7 +15,7 @@ class ClientBroadcastService {
   private val connectedClients = new ConcurrentHashMap[UUID, ConnectedClient]()
   import util.ThreadPools.CPU
 
-  def registerClient(userId: Option[UUID]): Flow[JsValue, JsValue, NotUsed] = {
+  def createWsStream(userId: Option[UUID]): Flow[JsValue, JsValue, NotUsed] = {
     val publisher = PublishProcessor.create[JsValue]()
     val clientId = UUID.randomUUID()
     val toClient = Source.fromPublisher(publisher).

@@ -43,7 +43,7 @@ class MainController(components: ControllerComponents, assets: Assets,
 
   def wsStream() = WebSocket.acceptOrResult[JsValue, JsValue] { request =>
     authService.checkCookie(request).map(_.map(_.userId)).map { maybeUserId =>
-      Right(clientBroadcastService.registerClient(maybeUserId))
+      Right(clientBroadcastService.createWsStream(maybeUserId))
     }
   }
 
