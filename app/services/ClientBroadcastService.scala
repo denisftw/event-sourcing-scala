@@ -8,10 +8,11 @@ import org.reactivestreams.Subscriber
 import play.api.libs.json.{JsObject, JsString, JsValue}
 
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import scala.concurrent.Future
 
 class ClientBroadcastService {
-  private var connectedClients = Map.empty[UUID, ConnectedClient]
+  private val connectedClients = new ConcurrentHashMap[UUID, ConnectedClient]()
   import util.ThreadPools.CPU
 
   def registerClient(userId: Option[UUID]): Flow[JsValue, JsValue, NotUsed] = {
@@ -44,19 +45,21 @@ class ClientBroadcastService {
   }
 
   def broadcastUpdate(data: JsValue): Future[Unit] = Future {
-    connectedClients.values.foreach { client =>
+    connectedClients.values().forEach { client =>
       client.out.onNext(data)
     }
   }
 
-  def broadcastQuestionThreadUpdate(questionThreadId: UUID, data: JsValue): Future[Unit] = Future {
-    connectedClients.values.filter(_.questionThreadId.contains(questionThreadId)).foreach { client =>
+  def broadcastQuestionThreadUpdate(questionThreadId: UUID, data: JsValue):
+  Future[Unit] = Future {
+    connectedClients.values().stream().filter(
+      _.questionThreadId.contains(questionThreadId)).forEach { client =>
       client.out.onNext(data)
     }
   }
 
   def sendErrorMessage(userId: UUID, message: String): Future[Unit] = Future {
-    connectedClients.values.filter(_.userId.contains(userId)).foreach { client =>
+    connectedClients.values().stream().filter(_.userId.contains(userId)).forEach { client =>
       client.out.onNext(JsObject(Seq("error" -> JsString(message))))
     }
   }
@@ -68,24 +71,17 @@ class ClientBroadcastService {
   }
 
   private def updateQuestionThread(clientId: UUID, newQuestionThreadId: Option[UUID]): Unit = {
-    connectedClients.synchronized {
-      connectedClients.get(clientId).foreach { client =>
-        val updated = client.copy(questionThreadId = newQuestionThreadId)
-        connectedClients += (clientId -> updated)
-      }
-    }
+    connectedClients.computeIfPresent(clientId, (_, client) => {
+      client.copy(questionThreadId = newQuestionThreadId)
+    })
   }
 
   private def addConnectedClient(clientId: UUID, connectedClient: ConnectedClient): Unit = {
-    connectedClients.synchronized {
-      connectedClients += (clientId -> connectedClient)
-    }
+    connectedClients.put(clientId, connectedClient)
   }
 
   private def removeDisconnectedClient(clientId: UUID): Unit = {
-    connectedClients.synchronized {
-      connectedClients -= clientId
-    }
+    connectedClients.remove(clientId)
   }
 
   case class ConnectedClient(userId: Option[UUID], questionThreadId: Option[UUID],
